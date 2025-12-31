@@ -3,6 +3,7 @@
 // =========================
 
 #include <NfcAdapter.h>
+#include <string>
 #define PN532_RSTPDN 26
 #if 0
   #define NFC_INTERFACE_SPI
@@ -17,18 +18,35 @@
   #define PN532_SCK  18
   #define PN532_IRQ 27 // IRQ pin from PN532 (active LOW)
   PN532_SPI pn532spi(SPI, 10);
+  PN532 pn532(pn532spi);
   NfcAdapter nfcAdapter(pn532spi);
-#elif 0
+#elif 1
   #define NFC_INTERFACE_HSU
   #include <PN532_HSU.h>
   #include <PN532_HSU.cpp>
   #include <PN532.h>
-      
-  PN532_HSU pn532hsu(Serial2);
+ 
+  class HardwareSerialWrapper : public HardwareSerial {
+    public:;
+    HardwareSerialWrapper(HardwareSerial& serial) : HardwareSerial(serial) {}
+
+    int read() override {
+      int result = HardwareSerial::read();
+      if (result < 0)
+      {
+        delay(1); // give time to other tasks
+      }
+      return result;
+    }
+  };
+  HardwareSerialWrapper SerialWrapper(Serial2);
+  PN532_HSU pn532hsu(SerialWrapper);
+  PN532 pn532(pn532hsu);
   NfcAdapter nfcAdapter(pn532hsu);
 
 #define PN532_RX 16
 #define PN532_TX 17
+#define PN532_TAG_READ_TIMEOUT 100
  // PN532 nfc(pn532hsu);
 #else 
   #define NFC_INTERFACE_I2C
@@ -38,9 +56,11 @@
   #include <PN532.h>
 
   PN532_I2C pn532_i2c(Wire);      // I2C interface
+  PN532 pn532(pn532_i2c);
   NfcAdapter nfcAdapter(pn532_i2c);
 #define SDA_PIN 16
 #define SCL_PIN 17
+#define PN532_TAG_READ_TIMEOUT 1
 //#define PN532_IRQ 27 // IRQ pin from PN532 (active LOW)
 #endif
 
@@ -66,7 +86,7 @@ static bool tagActive = false;          // True while a tag is present
 static unsigned long debounceStart = 0; // Debounce timer
 const unsigned long debounceTime = 150; // Debounce duration in ms
 
-void handleTag(NfcTag &tag);
+std::string handleTag(NfcTag &tag);
 void nfcTask(void *pvParameters);
 // =========================
 // Setup
@@ -119,30 +139,91 @@ void setup()
   Serial.println("PN532 ready");
 }
 
+
 // FreeRTOS Task
 void nfcTask(void *pvParameters) {
-  bool lastTagState = false;
-  const unsigned long pollInterval = 100; // ms
-  bool tagPresent;
+  const unsigned long pollInterval = 50; // ms
+  bool tagPresent = false;
+  std::string text = "";
+  uint8_t lastUid[7] = {0};
+  uint8_t lastUidLength = 0;
+
+  int tagReadFailedCount = 0;
   for (;;) {
-    bool detected = nfcAdapter.tagPresent(1);
+    uint8_t uid[7];
+    uint8_t uidLength;
+    bool detected = pn532.readPassiveTargetID(PN532_MIFARE_ISO14443A, uid, &uidLength
+#ifdef PN532_TAG_READ_TIMEOUT    
+    , PN532_TAG_READ_TIMEOUT
+#endif
+    );
 
     // Tag detected
-    if (detected && !lastTagState) {
-      lastTagState = true;
-      tagPresent = true;
-      digitalWrite(LED_PIN, HIGH);
+    if (detected) {
+     
+      if (lastUidLength == uidLength && memcmp(lastUid, uid, uidLength) == 0)
+      {
+        // same tag as before
+      }
+      else
+      {
+        NfcTag tag = nfcAdapter.read();
+        std::string result = handleTag(tag);
 
-      NfcTag tag = nfcAdapter.read();
-      handleTag(tag);
+        NfcTag tag2 = nfcAdapter.read();
+        std::string result2 = handleTag(tag2);
+
+        if (result != result2)
+        {
+          Serial.println("Warning: Inconsistent tag reads!");
+        }
+        else
+        {
+          lastUidLength = uidLength;
+          memset(lastUid, 0, sizeof(lastUid));
+          memcpy(lastUid, uid, uidLength);
+          digitalWrite(LED_PIN, HIGH);
+          Serial.print("UID: ");
+          for (unsigned int i = 0; i < uidLength; i++)
+          {
+            if (uid[i] < 0x10)
+            {
+              Serial.print("0");
+            }
+            Serial.print(uid[i], HEX);
+            if (i != uidLength - 1)
+            {
+              Serial.print(" ");
+            }
+          }
+          Serial.println();
+
+          Serial.print("Content: ");
+          Serial.println(result.c_str());
+          text = result;
+          tagPresent = true;
+          digitalWrite(LED_PIN, HIGH);
+        }
+      }
     }
-
-    // Tag removed
-    if (!detected && lastTagState) {
-      lastTagState = false;
-      tagPresent = false;
-      digitalWrite(LED_PIN, LOW);
-      Serial.println("Tag removed");
+    else if (tagPresent)
+    {
+      tagReadFailedCount++;
+      if (tagReadFailedCount >= 2)
+      {
+        // reset last tag info after several failed reads
+        tagPresent = false;
+        text = "";
+        lastUidLength = 0;
+        memset(lastUid, 0, sizeof(lastUid));
+        tagReadFailedCount = 0;
+        digitalWrite(LED_PIN, LOW);
+        Serial.println("Tag removed");
+      }
+      else
+      {
+        continue; // try again
+      }
     }
 
     vTaskDelay(pdMS_TO_TICKS(pollInterval));
@@ -174,17 +255,12 @@ void loop()
 // =========================
 // Tag processing function
 // =========================
-void handleTag(NfcTag &tag)
+std::string handleTag(NfcTag &tag)
 {
-  Serial.println("NFC tag detected");
-
-  Serial.print("UID: ");
-  Serial.println(tag.getUidString());
-
+  std::string result = "";
   if (!tag.hasNdefMessage())
   {
-    Serial.println("No NDEF message found");
-    return;
+    return result;
   }
 
   NdefMessage msg = tag.getNdefMessage();
@@ -208,23 +284,15 @@ void handleTag(NfcTag &tag)
       int langLength = status & 0x3F; // lower 6 bits
       // Text starts after status + language code
       int textLength = payloadLength - 1 - langLength;
-      String text = "";
       for (int i = 0; i < textLength; i++)
       {
-        text += (char)payload[1 + langLength + i];
+        result += (char)payload[1 + langLength + i];
       }
       delete[] payload;
 
-      if (nfcAdapter.tagPresent(1))
-      {
-        Serial.print("Text: ");
-        Serial.println(text);
-      }
-      else
-      {
-        Serial.println("Read failed, tag removed too quickly");
-      }
+      
 
     }
   }
+  return result;
 }
