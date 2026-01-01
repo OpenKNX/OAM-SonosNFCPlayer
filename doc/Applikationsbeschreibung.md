@@ -31,6 +31,22 @@ Z.B.:
 x-rincon-mp3radio://https://orf-live.ors-shoutcast.at/wie-q2a
 
 <!-- DOC -->
+### Haupt-Sonoskanal
+
+Sonsos Kanal der vom Player benutzt wird
+
+<!-- DOC -->
+### Zweit-Sonoskanal (0-deaktiviert)
+
+Zweiter Kanal der automatisch beim starten zum Hauptkanal gruppiert wird.
+0 bedeutet, dass kein weitere Kanal automatisch zum Hauptkanal gruppiert wird.
+
+<!-- DOC -->
+### Stoppt Wiedergabe beim Entfernen der Karte
+
+Beim Entfernen der Karte wird die Wiedergabe automatisch gestoppt.
+
+<!-- DOC -->
 ### Dateifreigabe Präfix
 
 Prefix, der für Dateiwiedergaben hinzugefügt werden soll.

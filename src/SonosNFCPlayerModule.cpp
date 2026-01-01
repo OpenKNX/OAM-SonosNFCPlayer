@@ -41,10 +41,12 @@ void SonosNFCPlayerModule::loop(bool configured)
         if (_currentCard)
         {
             logInfoP("Card with content: %s", _currentCard->getTextContent().c_str());
+            KoPLY_Card.value(true, DPT_Switch);
         }
         else
         {
             logInfoP("No card present");
+            KoPLY_Card.value(false, DPT_Switch);
         }
     }
 }

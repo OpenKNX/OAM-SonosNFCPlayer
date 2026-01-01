@@ -25,21 +25,40 @@
              
             </ParameterTypes>
             <Parameters>
-              <Union SizeInBit="400">
+              <Union SizeInBit="424">
                 <Memory CodeSegment="%MID%" Offset="0" BitOffset="0" />
                 <!-- File share prefix -->
-                <Parameter Id="%AID%_UP-%TT%00001" Name="FileSharePrefix"        ParameterType="%AID%_PT-PLYFileSharePrefix"        Offset="0"  BitOffset="0" Text="Dateifreigabe Präfix" Value="//192.168.0.1/Share/" />
+                <Parameter Offset="0"  BitOffset="0"  Id="%AID%_UP-%TT%00001" Name="FileSharePrefix"   ParameterType="%AID%_PT-PLYFileSharePrefix"       Text="Dateifreigabe Präfix" Value="//192.168.0.1/Share/" />
                 <!-- ^^^ need 50 bytes ^^^ -->
+                <!-- Main channel -->
+                <Parameter Offset="50"  BitOffset="0" Id="%AID%_UP-%TT%00002" Name="MainChannel"       ParameterType="%AID%_PT-SONNumChannelsWithout0"   Text="Haupt-Sonoskanal" Value="1" />
+                <!-- Secondary channel -->
+                <Parameter Offset="51"  BitOffset="0" Id="%AID%_UP-%TT%00003" Name="SecondaryChannel"  ParameterType="%AID%_PT-SONNumChannels"           Text="Zweit-Sonoskanal (0 = deaktiviert)" Value="0" />
+                <!-- Stop playing on remove tag -->
+                <Parameter Offset="52"  BitOffset="0" Id="%AID%_UP-%TT%00004" Name="StopOnRemoveTag"   ParameterType="%AID%_PT-OnOffYesNo"              Text="Stoppt Wiedergabe beim Entfernen der Karte" Value="1" />
+                <!-- 7 bits free -->
               </Union>
+
+           
 
             </Parameters>
             <ParameterRefs>
               <!-- File share prefix -->
               <ParameterRef Id="%AID%_UP-%TT%00001_R-%TT%0000100" RefId="%AID%_UP-%TT%00001" />
+              <!-- Main channel -->
+              <ParameterRef Id="%AID%_UP-%TT%00002_R-%TT%0000200" RefId="%AID%_UP-%TT%00002" />
+              <!-- Secondary channel -->
+              <ParameterRef Id="%AID%_UP-%TT%00003_R-%TT%0000300" RefId="%AID%_UP-%TT%00003" />
+              <!-- Stop playing on remove tag -->
+              <ParameterRef Id="%AID%_UP-%TT%00004_R-%TT%0000400" RefId="%AID%_UP-%TT%00004" />
             </ParameterRefs>
             <ComObjectTable>
+              <!-- Valid card -->
+              <ComObject Id="%AID%_O-%TT%00001" Name="Card" Number="1" Text="Gültige Karte vorhanden"  FunctionText="Player: Ausgang" ObjectSize="1 Bit" DatapointType="DPST-1-11" ReadFlag="Enabled" WriteFlag="Disabled" CommunicationFlag="Enabled" TransmitFlag="Enabled" UpdateFlag="Disabled" ReadOnInitFlag="Disabled"  />
             </ComObjectTable>
             <ComObjectRefs>
+              <!-- Valid card -->
+              <ComObjectRef Id="%AID%_O-%TT%00001_R-%TT%0000100" RefId="%AID%_O-%TT%00001" />
             </ComObjectRefs>
           </Static>
           <Dynamic>
@@ -49,8 +68,15 @@
                 <ParameterSeparator Id="%AID%_PS-nnn" Text="Version: %ModuleVersion%" />
                 <ParameterSeparator Id="%AID%_PS-nnn" Text="" UIHint="HorizontalRuler" />
               
+                <ComObjectRefRef RefId="%AID%_O-%TT%00001_R-%TT%0000100" />
 
                 <ParameterSeparator Id="%AID%_PS-nnn" Text="Einstellungen" UIHint="Headline" />
+                <!-- Main channel -->
+                <ParameterRefRef RefId="%AID%_UP-%TT%00002_R-%TT%0000200" IndentLevel="1" HelpContext="%DOC%" />
+                <!-- Secondary channel -->
+                <ParameterRefRef RefId="%AID%_UP-%TT%00003_R-%TT%0000300" IndentLevel="1" HelpContext="%DOC%" />
+                <!-- Stop playing on remove tag -->
+                <ParameterRefRef RefId="%AID%_UP-%TT%00004_R-%TT%0000400" IndentLevel="1" HelpContext="%DOC%" />
                
                 <!-- File share prefix -->
                 <ParameterRefRef RefId="%AID%_UP-%TT%00001_R-%TT%0000100" IndentLevel="1" HelpContext="%DOC%" />
