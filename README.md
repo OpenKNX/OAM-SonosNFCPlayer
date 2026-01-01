@@ -1,17 +1,13 @@
+# OAM-SonosNFCPlayer
 
-# OAM-Sonsos
-
-This modul allows to control Sonsos speaker via the unoffical local API
+Diese SW implementiert einen virtueller Plattenspieler für Sonos-Lautsprecher.
+Als Platten werden NFC-Tags zur Auswahl der Sound-Quelle verwendet.
 
 ## Features
 
-- Grouping / Ungrouping
-- Switch to next playing group
-- Change volume
-- Mute
-- Play / Pause
-- Start playing radio, mediafiles etc.
-- Play notifcation sound over the current running music
+- Konfigurierbar über KNX-IP 
+- Erlaubt die Auswahl von Sound-Quellen mithilfe von NFC-Tags.
+- Steuerung der Lautstärke von 2 Einzellautsprechern und der Gruppe über Drehwinkel-Geber.
 
 ## Anwenderdokumentation
 
@@ -19,15 +15,15 @@ Die Anwenderdokumentation ist [hier](./doc/Applikationsbeschreibung.md) zu finde
 
 ## Firmware
 
-Eine vorkomplierte Firmware ist [hier](https://github.com/OpenKNX/OAM-Sonos/releases) zu finden. ZIP Datei herunterladen, entpacken und der Anleitung im Readme folgen.
+Eine vorkomplierte Firmware ist [hier](https://github.com/OAM-SonosNFCPlayer/releases) zu finden. ZIP Datei herunterladen, entpacken und der Anleitung im Readme folgen.
 
 ## Hardware
 
-Als Hardware kann jede OpenKNX oder OpenKNX-Ready Hardware mit LAN oder WLAN verwendet werden.
-Die vorkompilierte Firmware unterstützt:
-
-- [REG1-LAN-TP-Base](https://github.com/OpenKNX/OpenKNX/wiki/REG1-LAN-TP-Base)
-- [Adafruit ESP32 Feather V2](https://github.com/OpenKNX/OpenKNX/wiki/Adafruit-ESP32-Feather-V2)
+- ESP32 Dev-Board 
+- PN532 Board
+- 3xKY-040 Drehwinkelgeber
+- 1 LED
+- Beliebig viele NFC Tags
 
 ## Lizenz
 

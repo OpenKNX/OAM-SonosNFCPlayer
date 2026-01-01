@@ -1,60 +1,75 @@
 #include "cardreader.h"
 #include "OpenKNX.h"
 
-// #define PN532_RSTPDN 26
-#define PN532_RSTPDN 26
-#if 0
-  #define NFC_INTERFACE_SPI
-  #include <SPI.h>
-  #include <PN532_SPI.h>
-  #include <PN532_SPI.cpp>
-  #include "PN532.h"
+#ifdef NFC_INTERFACE_SPI
+    #include <SPI.h>
+    #include <PN532_SPI.h>
+    #include "PN532.h"
 
-  #define PN532_CS   5
-  #define PN532_MISO 19
-  #define PN532_MOSI 23
-  #define PN532_SCK  18
-  #define PN532_IRQ 27 // IRQ pin from PN532 (active LOW)
-  PN532_SPI pn532interface(SPI, 10);
-#elif 1
-  #define NFC_INTERFACE_HSU
-  #include <PN532_HSU.h>
-  #include <PN532_HSU.cpp>
-  #include <PN532.h>
- 
-  class HardwareSerialWrapper : public HardwareSerial {
+    #ifndef PN532_CS
+    #error "PN532_CS not defined for SPI interface"
+    #endif
+    #ifndef PN532_MISO
+    #error "PN532_MISO not defined for SPI interface"
+    #endif
+    #ifndef PN532_MOSI
+    #error "PN532_MOSI not defined for SPI interface"
+    #endif
+    #ifndef PN532_SCK
+    #error "PN532_SCK not defined for SPI interface"
+    #endif
+
+    PN532_SPI pn532interface(SPI, 10);
+
+#elifdef NFC_INTERFACE_HSU
+    #include <PN532_HSU.h>
+    #include <PN532.h>
+
+    #ifndef PN532_RX
+    #error "PN532_RX not defined for HSU interface"
+    #endif
+    #ifndef PN532_TX
+    #error "PN532_TX not defined for HSU interface"
+    #endif
+    #ifndef PN532_TAG_READ_TIMEOUT
+    #define PN532_TAG_READ_TIMEOUT 100
+    #endif
+
+    class HardwareSerialWrapper : public HardwareSerial {
     public:;
     HardwareSerialWrapper(HardwareSerial& serial) : HardwareSerial(serial) {}
+        int read() override {
+            int result = HardwareSerial::read();
+            if (result < 0)
+            {
+            delay(1); // give time to other tasks
+            }
+            return result;
+        }
+    };
+    HardwareSerialWrapper SerialWrapper(Serial2);
+    PN532_HSU pn532interface(SerialWrapper);
 
-    int read() override {
-      int result = HardwareSerial::read();
-      if (result < 0)
-      {
-        delay(1); // give time to other tasks
-      }
-      return result;
-    }
-  };
-  HardwareSerialWrapper SerialWrapper(Serial2);
-  PN532_HSU pn532interface(SerialWrapper);
+    
+#elifdef NFC_INTERFACE_I2C
+    #include <Wire.h>
+    #include <PN532_I2C.h>
+    #include <PN532.h>
+    #ifndef PN532_SDA
+    #error "PN532_SDA not defined for I2C interface"
+    #endif
+    #ifndef PN532_SCL
+    #error "PN532_SCL not defined for I2C interface"
+    #endif
 
+    #ifndef PN532_TAG_READ_TIMEOUT
+    #define PN532_TAG_READ_TIMEOUT 1
+    #endif
 
-#define PN532_RX 16
-#define PN532_TX 17
-#define PN532_TAG_READ_TIMEOUT 100
- // PN532 nfc(pn532hsu);
-#else 
-  #define NFC_INTERFACE_I2C
-  #include <Wire.h>
-  #include <PN532_I2C.h>
-  #include <PN532_I2C.cpp>
-  #include <PN532.h>
+    PN532_I2C pn532interface(Wire);      // I2C interface
 
-  PN532_I2C pn532interface(Wire);      // I2C interface
-#define SDA_PIN 16
-#define SCL_PIN 17
-#define PN532_TAG_READ_TIMEOUT 1
-//#define PN532_IRQ 27 // IRQ pin from PN532 (active LOW)
+#else
+  #error "No NFC interface defined. Please define one of NFC_INTERFACE_SPI, NFC_INTERFACE_HSU, NFC_INTERFACE_I2C."
 #endif
 
 

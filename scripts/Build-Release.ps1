@@ -38,7 +38,7 @@ if (!$?) { exit 1 }
 # ../OGM-Common/scripts/setup/reusable/Build-Step.ps1 release_REG1_ETH SmartHomeBridge-Eth uf2
 # if (!$?) { exit 1 }
 
- ../OGM-Common/scripts/setup/reusable/Build-Step.ps1 release_ESP32_Sonos_NFC_Player firmware-Sonos-NFC-Player esp32
+ ../OGM-Common/scripts/setup/reusable/Build-Step.ps1 release_ESP32_Sonos_NFC_Player_HSU firmware-ESP32-Sonos-NFC-Player-HSU esp32
  if (!$?) { exit 1 }
 
 
