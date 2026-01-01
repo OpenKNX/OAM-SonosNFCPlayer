@@ -1,58 +1,52 @@
-// =========================
-// Includes
-// =========================
+#include "OpenKNX.h"
+#include "Logic.h"
+#include "SonosModule.h"
+#include "NetworkModule.h"
+#include "FileTransferModule.h"
+#include "FunctionBlocksModule.h"
+#include "SonosNFCPlayerModule.h"
+#ifdef USE_AUTO_CONNECT
+#include <AutoConnect.h>
+#include <WebServer.h>
+WebServer webServer(80);
+AutoConnect Portal(webServer);    
+AutoConnectConfig config;
+#endif
 
-#include "CardReader.h"
-
-
-
-// =========================
-// Pin definitions
-// =========================
-
-#define LED_PIN 2    // LED pin to indicate tag presence
-
-
-CardReader* cardReader = nullptr;
-
-// =========================
-// Setup
-// =========================
 void setup()
 {
-  Serial.begin(115200);
+    openknx.init();
+    openknx.addModule(0, openknxNetwork);
+    openknx.addModule(1, openknxLogic);
+    openknx.addModule(2, openknxFunctionBlocksModule);
+    openknx.addModule(3, openknxSonosModule);
+    openknx.addModule(4, openknxSonosNFCPlayer);
+    openknx.addModule(6, openknxFileTransferModule);
 
-  pinMode(LED_PIN, OUTPUT);         // LED indicates tag presence
-  digitalWrite(LED_PIN, LOW);       // LED off initially
-  cardReader = new CardReader();
-
-  Serial.println("Starting PN532");
-  cardReader->setup();
-  
-
+    openknx.setup();
+#ifdef USE_AUTO_CONNECT
+    config.apid ="OpenKNX";
+    config.password = "12345678";
+    Portal.config(config);
+    Portal.begin();
+#endif
 
 }
 
-
-std::shared_ptr<Card> _currentCard = nullptr;
-
-// =========================
-// Main loop
-// =========================
 void loop()
 {
-  auto currentCard = cardReader->currentCard();
-  if (currentCard !=  _currentCard)
-  {
-    _currentCard = currentCard;
-    if (_currentCard)
-    {
-      Serial.print("Card detected with content: ");
-      Serial.println(_currentCard->getTextContent().c_str());
-    }
-    else
-    {
-      Serial.println("Card removed");
-    }
-  }
+#ifdef USE_AUTO_CONNECT
+    Portal.handleClient();
+#endif
+   openknx.loop();
+}
+
+void setup1()
+{
+    openknx.setup1();
+}
+
+void loop1()
+{
+    openknx.loop1();
 }
