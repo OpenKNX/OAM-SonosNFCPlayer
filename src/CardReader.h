@@ -4,10 +4,20 @@
 #include <string>
 #include <memory>
 
+enum CardReaderState
+{
+    CARD_READER_STATE_INITIALIZING,
+    CARD_READER_STATE_IDLE,
+    CARD_READER_ERROR,
+    CARD_READER_STATE_TAG_READING,
+    CARD_READER_STATE_AVAILABLE,
+
+};
 
 class CardReader
 {
-    uint32_t _versionData;
+    CardReaderState _state = CARD_READER_STATE_INITIALIZING;
+    uint32_t _versionData = 0;
     PN532 _pn532;
     NfcAdapter _nfcAdapter;
     std::shared_ptr<Card> _currentCard;
@@ -22,5 +32,6 @@ public:
     void logInformation() const;
 
     std::shared_ptr<Card> currentCard();
+    CardReaderState state();
     
 };

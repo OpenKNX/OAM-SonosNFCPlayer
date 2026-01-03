@@ -20,11 +20,11 @@
 #define MAIN_FirmwareName "Sonos NFC Player (Dev)"
 #define MAIN_OpenKnxId 0xAE
 #define MAIN_ApplicationNumber 47
-#define MAIN_ApplicationVersion 1
+#define MAIN_ApplicationVersion 3
 #define MAIN_FirmwareRevision 0
 #define MAIN_ApplicationEncoding iso-8859-15
 #define MAIN_ParameterSize 8646
-#define MAIN_MaxKoNumber 1201
+#define MAIN_MaxKoNumber 1202
 #define MAIN_OrderNumber "MGKnxSONNFC"
 #define BASE_ModuleVersion 22
 #define NET_ModuleVersion 5
@@ -447,9 +447,12 @@
 #define ParamPLY_StopOnRemoveTag                     ((bool)(knx.paramByte(PLY_StopOnRemoveTag) & PLY_StopOnRemoveTagMask))
 
 #define PLY_KoCard 1201
+#define PLY_KoCardId 1202
 
 // Gültige Karte vorhanden
 #define KoPLY_Card                                (knx.getGroupObject(PLY_KoCard))
+// Karten-ID
+#define KoPLY_CardId                              (knx.getGroupObject(PLY_KoCardId))
 
 #define LOG_BuzzerInstalled                     2716      // 1 Bit, Bit 7
 #define     LOG_BuzzerInstalledMask 0x80

@@ -17,4 +17,13 @@
 
   <op:config name="%NET_ServiceNTP%" value="1" />
   <op:config name="%NET_WifiTool%" value="1" />
+  <op:config name="%NET_ServiceOTA%" value="1" />
+
+
+  <op:config name="%BASE_Info1LedFunc%" value="402"></op:config>
+  <op:config name="%BASE_Info2LedFunc%" value="0"></op:config>
+  <op:config name="%BASE_Info3LedFunc%" value="0"></op:config>
+  <op:config name="%BASE_Info1LedFunc_Access%" value="ReadWrite"></op:config>
+  <op:config name="%BASE_Info2LedFunc_Access%" value="ReadWrite"></op:config>
+  <op:config name="%BASE_Info3LedFunc_Access%" value="ReadWrite"></op:config>
 </KNX>

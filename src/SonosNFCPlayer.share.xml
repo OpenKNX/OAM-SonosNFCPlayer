@@ -1,13 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-model href="../../Organization/knxprod-support/knx_project_20/knx-editor.xsd" type="application/xml" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <KNX xmlns:op="http://github.com/OpenKNX/OpenKNXproducer" xmlns="http://knx.org/xml/project/20" CreatedBy="KNX MT" ToolVersion="5.1.255.16695">
-  <!-- Enable IPTool of ETS. This hide ip settings in network tab -->
-  <op:config name="%NET_IPConfigTool%" value="0" />
-  <op:config name="%NET_WifiTool%" value="0" />
-  <op:config name="%NET_LanMode%" value="0" />
-  <op:config name="%NET_ServiceNTP%" value="1" />
-  <op:config name="%NET_ServiceOTA%" value="1" />
-  <op:config name="%NET_ShowMediumInfo%" value="0" />
+ 
 
   <!-- Prepare: Not ready to use -->
   <op:config name="%NET_ServiceHTTP%" value="0" />
@@ -19,6 +13,16 @@
         <ApplicationProgram>
           <Static>
             <ParameterTypes>
+
+              <!-- Status LEDs-->
+							<ParameterType Id="%AID%_PT-SLEDFunc" Name="SLEDFunc">
+								<TypeRestriction Base="Value" SizeInBit="16" UIHint="DropDown">
+								<Enumeration Text="Player: Status" Value="402" Id="%ENID%" />
+                <Enumeration Text="Player: Tag Vorhanden" Value="403" Id="%ENID%" />
+								</TypeRestriction>
+							</ParameterType>
+
+
               <ParameterType Id="%AID%_PT-PLYFileSharePrefix" Name="FileSharePrefix">
                 <TypeText SizeInBit="400" />
               </ParameterType>
@@ -35,7 +39,7 @@
                 <!-- Secondary channel -->
                 <Parameter Offset="51"  BitOffset="0" Id="%AID%_UP-%TT%00003" Name="SecondaryChannel"  ParameterType="%AID%_PT-SONNumChannels"           Text="Zweit-Sonoskanal (0 = deaktiviert)" Value="0" />
                 <!-- Stop playing on remove tag -->
-                <Parameter Offset="52"  BitOffset="0" Id="%AID%_UP-%TT%00004" Name="StopOnRemoveTag"   ParameterType="%AID%_PT-OnOffYesNo"              Text="Stoppt Wiedergabe beim Entfernen der Karte" Value="1" />
+                <Parameter Offset="52"  BitOffset="0" Id="%AID%_UP-%TT%00004" Name="StopOnRemoveTag"   ParameterType="%AID%_PT-OnOffYesNo"              Text="Stoppt Wiedergabe beim Entfernen der Karte" Value="0" />
                 <!-- 7 bits free -->
               </Union>
 
@@ -55,10 +59,14 @@
             <ComObjectTable>
               <!-- Valid card -->
               <ComObject Id="%AID%_O-%TT%00001" Name="Card" Number="1" Text="Gültige Karte vorhanden"  FunctionText="Player: Ausgang" ObjectSize="1 Bit" DatapointType="DPST-1-11" ReadFlag="Enabled" WriteFlag="Disabled" CommunicationFlag="Enabled" TransmitFlag="Enabled" UpdateFlag="Disabled" ReadOnInitFlag="Disabled"  />
+              <!-- Card Id -->
+              <ComObject Id="%AID%_O-%TT%00002" Name="CardId" Number="2" Text="Karten-ID"  FunctionText="Player: Ausgang" ObjectSize="14 Bytes" DatapointType="DPST-16-0" ReadFlag="Enabled" WriteFlag="Disabled" CommunicationFlag="Enabled" TransmitFlag="Enabled" UpdateFlag="Disabled" ReadOnInitFlag="Disabled"  />
             </ComObjectTable>
             <ComObjectRefs>
               <!-- Valid card -->
               <ComObjectRef Id="%AID%_O-%TT%00001_R-%TT%0000100" RefId="%AID%_O-%TT%00001" />
+              <!-- Card Id -->
+              <ComObjectRef Id="%AID%_O-%TT%00002_R-%TT%0000200" RefId="%AID%_O-%TT%00002" />
             </ComObjectRefs>
           </Static>
           <Dynamic>
@@ -68,7 +76,10 @@
                 <ParameterSeparator Id="%AID%_PS-nnn" Text="Version: %ModuleVersion%" />
                 <ParameterSeparator Id="%AID%_PS-nnn" Text="" UIHint="HorizontalRuler" />
               
+                <!-- Valid card -->
                 <ComObjectRefRef RefId="%AID%_O-%TT%00001_R-%TT%0000100" />
+                <!-- Card Id -->
+                <ComObjectRefRef RefId="%AID%_O-%TT%00002_R-%TT%0000200" />
 
                 <ParameterSeparator Id="%AID%_PS-nnn" Text="Einstellungen" UIHint="Headline" />
                 <!-- Main channel -->

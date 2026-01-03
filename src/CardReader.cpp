@@ -2,77 +2,77 @@
 #include "OpenKNX.h"
 
 #ifdef NFC_INTERFACE_SPI
-    #include <SPI.h>
-    #include <PN532_SPI.h>
-    #include "PN532.h"
+#include <SPI.h>
+#include <PN532_SPI.h>
+#include "PN532.h"
 
-    #ifndef PN532_CS
-    #error "PN532_CS not defined for SPI interface"
-    #endif
-    #ifndef PN532_MISO
-    #error "PN532_MISO not defined for SPI interface"
-    #endif
-    #ifndef PN532_MOSI
-    #error "PN532_MOSI not defined for SPI interface"
-    #endif
-    #ifndef PN532_SCK
-    #error "PN532_SCK not defined for SPI interface"
-    #endif
-
-    PN532_SPI pn532interface(SPI, 10);
-
-#elifdef NFC_INTERFACE_HSU
-    #include <PN532_HSU.h>
-    #include <PN532.h>
-
-    #ifndef PN532_RX
-    #error "PN532_RX not defined for HSU interface"
-    #endif
-    #ifndef PN532_TX
-    #error "PN532_TX not defined for HSU interface"
-    #endif
-    #ifndef PN532_TAG_READ_TIMEOUT
-    #define PN532_TAG_READ_TIMEOUT 100
-    #endif
-
-    class HardwareSerialWrapper : public HardwareSerial {
-    public:;
-    HardwareSerialWrapper(HardwareSerial& serial) : HardwareSerial(serial) {}
-        int read() override {
-            int result = HardwareSerial::read();
-            if (result < 0)
-            {
-            delay(1); // give time to other tasks
-            }
-            return result;
-        }
-    };
-    HardwareSerialWrapper SerialWrapper(Serial2);
-    PN532_HSU pn532interface(SerialWrapper);
-
-    
-#elifdef NFC_INTERFACE_I2C
-    #include <Wire.h>
-    #include <PN532_I2C.h>
-    #include <PN532.h>
-    #ifndef PN532_SDA
-    #error "PN532_SDA not defined for I2C interface"
-    #endif
-    #ifndef PN532_SCL
-    #error "PN532_SCL not defined for I2C interface"
-    #endif
-
-    #ifndef PN532_TAG_READ_TIMEOUT
-    #define PN532_TAG_READ_TIMEOUT 1
-    #endif
-
-    PN532_I2C pn532interface(Wire);      // I2C interface
-
-#else
-  #error "No NFC interface defined. Please define one of NFC_INTERFACE_SPI, NFC_INTERFACE_HSU, NFC_INTERFACE_I2C."
+#ifndef PN532_CS
+#error "PN532_CS not defined for SPI interface"
+#endif
+#ifndef PN532_MISO
+#error "PN532_MISO not defined for SPI interface"
+#endif
+#ifndef PN532_MOSI
+#error "PN532_MOSI not defined for SPI interface"
+#endif
+#ifndef PN532_SCK
+#error "PN532_SCK not defined for SPI interface"
 #endif
 
+PN532_SPI pn532interface(SPI, 10);
 
+#elifdef NFC_INTERFACE_HSU
+#include <PN532_HSU.h>
+#include <PN532.h>
+
+#ifndef PN532_RX
+#error "PN532_RX not defined for HSU interface"
+#endif
+#ifndef PN532_TX
+#error "PN532_TX not defined for HSU interface"
+#endif
+#ifndef PN532_TAG_READ_TIMEOUT
+#define PN532_TAG_READ_TIMEOUT 100
+#endif
+
+class HardwareSerialWrapper : public HardwareSerial
+{
+public:
+    ;
+    HardwareSerialWrapper(HardwareSerial &serial) : HardwareSerial(serial) {}
+    int read() override
+    {
+        int result = HardwareSerial::read();
+        if (result < 0)
+        {
+            delay(1); // give time to other tasks
+        }
+        return result;
+    }
+};
+HardwareSerialWrapper SerialWrapper(Serial2);
+PN532_HSU pn532interface(SerialWrapper);
+
+#elifdef NFC_INTERFACE_I2C
+#include <Wire.h>
+#include <PN532_I2C.h>
+#include <PN532.h>
+#ifndef PN532_SDA
+#error "PN532_SDA not defined for I2C interface"
+#endif
+#ifndef PN532_SCL
+#error "PN532_SCL not defined for I2C interface"
+#endif
+
+#ifndef PN532_TAG_READ_TIMEOUT
+#define PN532_TAG_READ_TIMEOUT 1
+#endif
+
+PN532_I2C pn532interface(Wire); // I2C interface
+
+#else
+#error "No NFC interface defined. Please define one of NFC_INTERFACE_SPI, NFC_INTERFACE_HSU, NFC_INTERFACE_I2C."
+#endif
 
 CardReader::CardReader()
     : _pn532(pn532interface), _nfcAdapter(pn532interface)
@@ -136,32 +136,36 @@ void CardReader::setup()
     // Initialize UART2 for PN532
     Serial2.begin(115200, SERIAL_8N1, PN532_RX, PN532_TX);
 #endif
-#ifdef PN532_IRQ
-    pinMode(PN532_IRQ, INPUT_PULLUP); // IRQ is active LOW
-#endif
+
     _pn532.begin();
     _versionData = _pn532.getFirmwareVersion();
     if (_versionData)
     {
         _nfcAdapter.begin();
-        xTaskCreate(
+        xTaskCreatePinnedToCore(
             [](void *pvParameters)
             { static_cast<CardReader *>(pvParameters)->nfcTask(); }, // Function to implement the task
             "NFC Task",                                              // Name
             4096,                                                    // Stack size
             this,                                                    // Parameter
             1,                                                       // Priority
-            NULL                                                     // Task handle
+            NULL,                                                    // Task handle
+            xPortGetCoreID() ? 0 : 1                                 // Core ID
         );
+    }
+    else
+    {
+        _state = CardReaderState::CARD_READER_ERROR;
     }
     logInformation();
 }
 
 void CardReader::nfcTask()
 {
+    _state = CardReaderState::CARD_READER_STATE_IDLE;
     const unsigned long pollInterval = 50; // ms
     bool tagPresent = false;
-    uint8_t lastUid[7] = {0};
+    uint8_t *lastUid[7] = {0};
     uint8_t lastUidLength = 0;
     int tagReadFailedCount = 0;
     for (;;)
@@ -178,13 +182,13 @@ void CardReader::nfcTask()
         // Tag detected
         if (detected)
         {
-
             if (lastUidLength == uidLength && memcmp(lastUid, uid, uidLength) == 0)
             {
                 // same tag as before
             }
             else
             {
+                _state = CardReaderState::CARD_READER_STATE_TAG_READING;
                 NfcTag tag = _nfcAdapter.read();
                 std::string result = handleTag(tag);
 
@@ -194,6 +198,7 @@ void CardReader::nfcTask()
                 if (result != result2)
                 {
                     logWarningP("Inconsistent tag reads detected");
+                    _state = CardReaderState::CARD_READER_STATE_IDLE;
                 }
                 else
                 {
@@ -201,24 +206,31 @@ void CardReader::nfcTask()
                     memset(lastUid, 0, sizeof(lastUid));
                     memcpy(lastUid, uid, uidLength);
                     tagPresent = true;
-                    _currentCard = std::make_shared<Card>(result);
+                    _currentCard = std::make_shared<Card>(uid, uidLength, result.c_str(), result.length());
+                    _state = CardReaderState::CARD_READER_STATE_AVAILABLE;
                 }
             }
         }
         else if (tagPresent)
         {
+
             tagReadFailedCount++;
             if (tagReadFailedCount >= 2)
             {
                 // reset last tag info after several failed reads
                 tagPresent = false;
                 lastUidLength = 0;
+                _state = CardReaderState::CARD_READER_STATE_IDLE;
                 _currentCard = nullptr;
             }
             else
             {
                 continue; // try again
             }
+        }
+        if (_state == CardReaderState::CARD_READER_STATE_INITIALIZING)
+        {
+            _state = CardReaderState::CARD_READER_STATE_IDLE;
         }
 
         vTaskDelay(pdMS_TO_TICKS(pollInterval));
@@ -228,6 +240,11 @@ void CardReader::nfcTask()
 std::shared_ptr<Card> CardReader::currentCard()
 {
     return _currentCard;
+}
+
+CardReaderState CardReader::state()
+{
+    return _state;
 }
 
 std::string CardReader::handleTag(NfcTag &tag)
@@ -259,6 +276,7 @@ std::string CardReader::handleTag(NfcTag &tag)
             int langLength = status & 0x3F; // lower 6 bits
             // Text starts after status + language code
             int textLength = payloadLength - 1 - langLength;
+
             result = std::string(textLength, ' ');
             memcpy((char *)result.c_str(), &payload[1 + langLength], textLength);
             delete[] payload;
