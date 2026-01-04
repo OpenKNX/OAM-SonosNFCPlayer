@@ -86,7 +86,6 @@ Beispiel: x-file-cifs:Pink Floyd/The Wall/
 Dateifreigabe Prefix: //192.168.0.1/Share/Storage/Musik
 Abgespielt wird: //192.168.0.1/Share/Storage/Musik/Pink Floyd/The Wall/
 
-
 <!-- DOC -->
 ### Haupt-Sonoskanal
 
