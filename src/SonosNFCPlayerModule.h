@@ -6,6 +6,7 @@
 #include <ESP32Encoder.h>
 #include "LedFunctionPlayerState.h"
 #include "LedFunctionTag.h"
+#include "SonosChannel.h"
 
 class SonosChannel;
 class SonosVolumeController;
@@ -16,6 +17,7 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     bool _lastButtonState1 = false;
     bool _lastButtonState2 = false;
     bool _lastButtonState3 = false;
+    std::shared_ptr<SonosChannedPlayHandle> _currentPlayHandle = nullptr;
     ESP32Encoder _encoder1;
     ESP32Encoder _encoder2;
     ESP32Encoder _encoder3;
@@ -31,8 +33,11 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     SonosVolumeController* _sonosVolumeController2 = nullptr;
     std::string _filePathPrefix;
     std::shared_ptr<Card> _currentCard = nullptr;
+    uint16_t _pulsingInterval = 909;
     CardReaderState _cardReaderState = CardReaderState::CARD_READER_STATE_IDLE;
     std::string readParameterString(uint8_t* parameterValue, int size);
+    void handleButtons();
+    void handleLeds();
   public:
     const std::string logPrefix() override;
     const std::string name() override;
@@ -42,8 +47,10 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     void setup(bool configured) override;
     bool processCommand(const std::string cmd, bool debugKo);
     void showHelp() override;
-    void handleButtons();
     bool hasTag() const;
+    bool isPlayingTag() const;
+    uint16_t getPulsingInterval() const;
+    CardReaderState cardReaderState() const;
 
 };
 

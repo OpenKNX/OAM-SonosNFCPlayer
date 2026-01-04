@@ -137,8 +137,7 @@ std::string SonosNFCPlayerModule::readParameterString(uint8_t *parameterValue, i
 
 void SonosNFCPlayerModule::loop(bool configured)
 {
-    _ledFunctionPlayerState.loop();
-    _ledFunctionTag.loop();
+    handleLeds();
     handleButtons();
     if (_cardReader == nullptr)
         return;
@@ -163,22 +162,34 @@ void SonosNFCPlayerModule::loop(bool configured)
         _currentCard = currentCard;
         if (_currentCard != nullptr)
         {
+            _pulsingInterval = _currentCard->hasCommand("SINGLE") ?  667 : 909;
+            _currentPlayHandle = nullptr;
             logInfoP("New card detected");
             logIndentUp();
             _currentCard->logInformation();
             logIndentDown();
             KoPLY_Card.value(true, DPT_Switch);
             KoPLY_CardId.value(_currentCard->getUid().c_str(), DPT_String_ASCII);
-            if (_mainChannel != nullptr && _playAllowed)
+            handleLeds();
+            if (_mainChannel != nullptr)
             {
-                if (_currentCard->hasCommand("SHUFFLE"))
-                    _mainChannel->shuffle(true);
-                else
-                    _mainChannel->shuffle(false);
+                if (_playAllowed)
+                {
+                    if (_currentCard->hasCommand("SHUFFLE"))
+                        _mainChannel->shuffle(true);
+                    else
+                        _mainChannel->shuffle(false);
 
-                _mainChannel->start(_currentCard->getUrl().c_str(), _currentCard->getTitle().c_str(), _currentCard->getImageUrl().c_str(), _filePathPrefix.c_str());
-                if (_secondaryChannel != nullptr)
-                    _secondaryChannel->joinToGroupCoordinator(_mainChannel);
+                    _currentPlayHandle = _mainChannel->start(_currentCard->getUrl().c_str(), _currentCard->getTitle().c_str(), _currentCard->getImageUrl().c_str(), _filePathPrefix.c_str(), true);
+                    if (_secondaryChannel != nullptr)
+                        _secondaryChannel->joinToGroupCoordinator(_mainChannel);
+                }
+                else
+                {
+                    logWarningP("Play not allowed yet, starting up");
+                    _currentPlayHandle = _mainChannel->start(_currentCard->getUrl().c_str(), _currentCard->getTitle().c_str(), _currentCard->getImageUrl().c_str(), _filePathPrefix.c_str(), false);
+          
+                }
             }
         }
         else
@@ -186,6 +197,7 @@ void SonosNFCPlayerModule::loop(bool configured)
             logInfoP("Card removed");
             KoPLY_Card.value(false, DPT_Switch);
             KoPLY_CardId.value("", DPT_String_ASCII);
+            handleLeds();
             if (_mainChannel != nullptr && ParamPLY_StopOnRemoveTag)
                 _mainChannel->pause();
         }
@@ -195,6 +207,12 @@ void SonosNFCPlayerModule::loop(bool configured)
         _playAllowed = true;
     }
   
+}
+
+void SonosNFCPlayerModule::handleLeds()
+{
+    _ledFunctionPlayerState.loop();
+    _ledFunctionTag.loop();
 }
 
 bool SonosNFCPlayerModule::processCommand(const std::string cmd, bool debugKo)
@@ -232,4 +250,21 @@ bool SonosNFCPlayerModule::hasTag() const
     return _cardReaderState == CardReaderState::CARD_READER_ERROR ||
            _cardReaderState == CardReaderState::CARD_READER_STATE_TAG_READING ||
            _cardReaderState == CardReaderState::CARD_READER_STATE_AVAILABLE;
+}
+
+bool SonosNFCPlayerModule::isPlayingTag() const
+{
+    if (_mainChannel == nullptr)
+        return false;
+    return _mainChannel->isPlaying(_currentPlayHandle);
+}
+
+CardReaderState SonosNFCPlayerModule::cardReaderState() const
+{
+    return _cardReaderState;
+}
+
+uint16_t SonosNFCPlayerModule::getPulsingInterval() const
+{
+    return _pulsingInterval;
 }
