@@ -90,18 +90,23 @@ Abgespielt wird: //192.168.0.1/Share/Storage/Musik/Pink Floyd/The Wall/
 ### Programmierung über die NFC Tools App
 
 Schritt 1:
+
 ![Schritt 1](NFCToolsApp/ProgrammierenNFC1.PNG) 
 
 Schritt 2:
+
 ![Schritt 2](NFCToolsApp/ProgrammierenNFC2.PNG) 
 
 Schritt 3:
+
 ![Schritt 3](NFCToolsApp/ProgrammierenNFC3.PNG) 
 
 Schritt 4:
+
 ![Schritt 4](NFCToolsApp/ProgrammierenNFC4.PNG) 
 
 Schritt 5:
+
 ![Schritt 5](NFCToolsApp/ProgrammierenNFC5.PNG) 
 
 <!-- DOC -->
