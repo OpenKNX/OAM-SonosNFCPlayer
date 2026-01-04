@@ -25,6 +25,11 @@ Eine vorkomplierte Firmware ist [hier](https://github.com/OAM-SonosNFCPlayer/rel
 - 1 LED
 - Beliebig viele NFC Tags
 
+## NFC Tags
+
+Es können alle Standard NFC Tags verwendet werden.
+Anleitung unter [Programmierung der NFC Tags](./doc/Applikationsbeschreibung.md#programmierung-der-nfc-tags) in der Anwendungsdokumentation zu finden.
+
 ## Lizenz
 
 Diese Software steht unter der [GNU GPL v3](LICENSE).
