@@ -12,10 +12,11 @@ Card::Card(const uint8_t *uid, unsigned int uidLength, const char *content, unsi
         _uidStr += buf;
     }
     std::string contentStr(content, length);
-    if (contentStr.rfind('x-file-cifs://192.168.0.1/Share/Storage/Musik/') == 0)
+    if (contentStr.rfind("x-file-cifs://192.168.0.1/Share/Storage/Musik/") == 0)
     {
-        // old card format, convert to new
-        contentStr = "uri:" + contentStr;
+        // old card format, convert to new format
+        contentStr = "uri:x-file-cifs:" + contentStr.substr(46);
+        logDebug("Card", "Converted old card content to new format: %s", contentStr.c_str());
     }
     _commands = CommandParser::parse(contentStr);
 }

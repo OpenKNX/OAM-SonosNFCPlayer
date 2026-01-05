@@ -14,4 +14,5 @@ public:
     const std::vector<Command>& getCommands() const;
     bool hasCommand(const std::string& name) const;
     void logInformation() const;
+    
 };

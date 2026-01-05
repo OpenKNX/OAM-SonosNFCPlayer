@@ -35,8 +35,10 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     std::shared_ptr<Card> _currentCard = nullptr;
     uint16_t _pulsingInterval = 909;
     CardReaderState _cardReaderState = CardReaderState::CARD_READER_STATE_IDLE;
+    std::vector<Command> _commandsForNextCard;
     std::string readParameterString(uint8_t* parameterValue, int size);
-    bool tryParseDeviceCommand(const std::string &command, uint8_t &deviceIndex, uint8_t &percentage, uint8_t &onOff);
+    bool tryParseDeviceCommand(Command& command, uint8_t &deviceIndex, uint8_t &percentage, uint8_t &onOff);
+    void handleCommands(const std::vector<Command>& commands, bool cardRemoved = false);
     void handleButtons();
     void handleLeds();
   public:
