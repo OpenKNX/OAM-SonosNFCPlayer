@@ -28,6 +28,8 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     CardReader* _cardReader;
     SonosChannel* _mainChannel;
     SonosChannel* _secondaryChannel;
+    SonosChannel* _configuredMainChannel;
+    SonosChannel* _configuredSecondaryChannel;
     SonosGroupVolumeController* _sonosGroupVolumeController = nullptr;
     SonosVolumeController* _sonosVolumeController1= nullptr;
     SonosVolumeController* _sonosVolumeController2 = nullptr;

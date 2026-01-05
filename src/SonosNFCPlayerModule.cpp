@@ -35,18 +35,16 @@ void SonosNFCPlayerModule::setup(bool configured)
     if (configured)
     {
         _filePathPrefix = readParameterString(ParamPLY_FileSharePrefix, 50);
-        _mainChannel = openknxSonosModule.getChannel(ParamPLY_MainChannel - 1);
-        if (_mainChannel == nullptr)
-        {
+        _configuredMainChannel = openknxSonosModule.getChannel(ParamPLY_MainChannel - 1);
+        if (_configuredMainChannel == nullptr)
             logErrorP("Main channel %d not active", ParamPLY_MainChannel);
-        }
+        _mainChannel = _configuredMainChannel;
         if (ParamPLY_SecondaryChannel > 0)
         {
-            _secondaryChannel = openknxSonosModule.getChannel(ParamPLY_SecondaryChannel - 1);
-            if (_secondaryChannel == nullptr)
-            {
+            _configuredSecondaryChannel = openknxSonosModule.getChannel(ParamPLY_SecondaryChannel - 1);
+            if (_configuredSecondaryChannel == nullptr)
                 logErrorP("Secondary channel %d not active", ParamPLY_SecondaryChannel);
-            }
+            _secondaryChannel = _configuredSecondaryChannel;
         }
         // init encoder and buttons
 
@@ -137,24 +135,16 @@ bool SonosNFCPlayerModule::tryParseDeviceCommand(Command &command, uint8_t &devi
     deviceIndex = -1;
     percentage = -1;
     onOff = -1;
-    if (command.name.rfind("device", 0) != 0)
-    {
+    uint8_t device = 0;
+    if (!command.isNameWithIndex("device", device))
         return false;
-    }
-    std::string deviceIndexStr = command.name.substr(6);
-    if (deviceIndexStr.empty())
+    if (device < 1 || device > ParamDEV_VisibleChannels)
     {
-        logDebugP("Command '%s' does not contain device index", command.name.c_str());
+        logWarningP("Command '%s' contains invalid device %d", command.name.c_str(), device);
         return false;
     }
     try
     {
-        auto device = std::stoi(deviceIndexStr);
-        if (device < 1 || device > ParamDEV_VisibleChannels)
-        {
-            logWarningP("Command '%s' contains invalid device %d", command.name.c_str(), device);
-            return false;
-        }
         deviceIndex = device - 1;
         std::string lowerCaseParameter;
         for (char c : command.parameter)
@@ -178,9 +168,9 @@ bool SonosNFCPlayerModule::tryParseDeviceCommand(Command &command, uint8_t &devi
             percentage = percentageValue;
         }
     }
-    catch (const std::exception& e)
+    catch (const std::exception &e)
     {
-        logWarningP("Command '%s' contains invalid number: %s", command.name.c_str(), e.what());
+        logWarningP("Command '%s' contains invalid parameter %s: %s", command.name.c_str(), command.parameter.c_str(), e.what());
         return false; // keine gültige Zahl
     }
     return true;
@@ -315,9 +305,111 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                     KoDEV_CHSwitch.value(onOff == 1, DPT_Switch);
                 }
             }
-            else if (name == "shuffle" && _mainChannel != nullptr)
+            else
             {
-                _mainChannel->shuffle(command.getParameterAsBool(true));
+                uint8_t percentage = 0;
+                uint8_t channelNumber = 0;
+                if (command.name == "mainspeaker")
+                {
+                    _mainChannel = _configuredMainChannel;
+                }
+                else if (command.isNameWithIndex("mainspeaker", channelNumber))
+                {
+                    auto channel = openknxSonosModule.getChannel(channelNumber - 1);
+                    if (channel != nullptr)
+                        _mainChannel = channel;
+                    else
+                        logWarningP("Sonsos channel %d not found for speaker command", channelNumber);
+                }
+                else if (command.name == "secondaryspeaker")
+                {
+                    _secondaryChannel = _configuredSecondaryChannel;
+                }
+                else if (command.isNameWithIndex("secondaryspeaker", channelNumber))
+                {
+                    if (channelNumber == 0)
+                    {
+                        _secondaryChannel = nullptr;
+                    }
+                    else
+                    {
+                        auto channel = openknxSonosModule.getChannel(channelNumber - 1);
+                        if (channel != nullptr)
+                            _secondaryChannel = channel;
+                        else
+                            logWarningP("Sonsos channel %d not found for speaker command", channelNumber);
+                    }
+                }
+                else if (_mainChannel != nullptr)
+                {
+                    if (name == "shuffle")
+                        _mainChannel->shuffle(command.getParameterAsBool(true));
+                    else if (name == "volume" && command.TryGetParameterAsPercent(percentage))
+                        _mainChannel->setVolume(percentage);
+                    else if (name == "volumegroup" && command.TryGetParameterAsPercent(percentage))
+                        _mainChannel->setGroupVolume(percentage);
+                    else if (command.isNameWithIndex("volume", channelNumber))
+                    {
+                        auto channel = openknxSonosModule.getChannel(channelNumber - 1);
+                        if (channel != nullptr)
+                        {
+                            if (command.TryGetParameterAsPercent(percentage))
+                                channel->setVolume(percentage);
+                        }
+                        else
+                        {
+                            logWarningP("Sonsos channel %d not found for volume command", channelNumber);
+                        }
+                    }
+                    else if (command.isNameWithIndex("volumegroup", channelNumber))
+                    {
+                        auto channel = openknxSonosModule.getChannel(channelNumber - 1);
+                        if (channel != nullptr)
+                        {
+                            if (command.TryGetParameterAsPercent(percentage))
+                                channel->setGroupVolume(percentage);
+                        }
+                        else
+                        {
+                            logWarningP("Sonsos channel %d not found for volume command", channelNumber);
+                        }
+                    }
+                    else if (command.name == "join")
+                    {
+                        uint8_t channelNumber = 0;
+                        if (command.TryGetParameterAsPercent(channelNumber))
+                        {
+                            auto channel = openknxSonosModule.getChannel(channelNumber - 1);
+                            if (channel != nullptr)
+                                channel->joinToGroupCoordinatorOf(_mainChannel);
+                           
+                        }
+                        else
+                        {
+                            logWarningP("Parameter for join command is not valid: %s", command.parameter.c_str());
+                        }
+                    }
+                    else if (command.name == "unjoin")
+                    {
+                        uint8_t channelNumber = 0;
+                        if (command.TryGetParameterAsPercent(channelNumber))
+                        {
+                            auto channel = openknxSonosModule.getChannel(channelNumber - 1);
+                            if (channel != nullptr)
+                                channel->unjoin();
+                           
+                        }
+                        else
+                        {
+                            logWarningP("Parameter for unjoin command is not valid: %s", command.parameter.c_str());
+                        }
+                    }
+                }
+                if (_secondaryChannel != nullptr)
+                {
+                    if (name == "volumesecondary" && command.TryGetParameterAsPercent(percentage))
+                        _secondaryChannel->setVolume(percentage);
+                }
             }
         }
         if (name == "uri")
@@ -345,7 +437,7 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
     {
         _currentPlayHandle = _mainChannel->start(uri.c_str(), title.c_str(), image.c_str(), _filePathPrefix.c_str(), _playAllowed);
         if (_secondaryChannel != nullptr && _playAllowed)
-            _secondaryChannel->joinToGroupCoordinator(_mainChannel);
+            _secondaryChannel->joinToGroupCoordinatorOf(_mainChannel);
     }
     else if (pause && _playAllowed)
     {
@@ -376,7 +468,7 @@ void SonosNFCPlayerModule::togglePlay(bool onlyPlay)
             break;
         case SonosApiPlayState::Stopped:
             _mainChannel->start(_currentPlayHandle);
-             break;
+            break;
         case SonosApiPlayState::Transitioning:
         case SonosApiPlayState::Playing:
             if (!onlyPlay)
