@@ -50,13 +50,12 @@ void SonosNFCPlayerModule::setup(bool configured)
         }
         // init encoder and buttons
 
-       
         pinMode(ENCODER1_BUTTON, INPUT_PULLUP);
         ESP32Encoder::useInternalWeakPullResistors = puType::up;
         logDebugP("Attaching encoder 1");
         _encoder1.attachHalfQuad(ENCODER1_DT, ENCODER1_CLK);
         _encoder1.setCount(0);
-       
+
         pinMode(ENCODER2_BUTTON, INPUT_PULLUP);
         ESP32Encoder::useInternalWeakPullResistors = puType::up;
         logDebugP("Attaching encoder 2");
@@ -69,16 +68,15 @@ void SonosNFCPlayerModule::setup(bool configured)
         _encoder2.attachHalfQuad(ENCODER3_DT, ENCODER3_CLK);
         _encoder2.setCount(0);
 
-
         // init sonos volume
         if (_mainChannel != nullptr)
         {
-        //     _sonosGroupVolumeController = new SonosGroupVolumeController(_encoder1, _mainChannel);
-        //     _sonosVolumeController1 = new SonosVolumeController(_encoder2, _mainChannel);
+            //     _sonosGroupVolumeController = new SonosGroupVolumeController(_encoder1, _mainChannel);
+            //     _sonosVolumeController1 = new SonosVolumeController(_encoder2, _mainChannel);
         }
         if (_secondaryChannel != nullptr)
         {
-          //  _sonosVolumeController2 = new SonosVolumeController(_encoder3, _secondaryChannel);
+            //  _sonosVolumeController2 = new SonosVolumeController(_encoder3, _secondaryChannel);
         }
     }
 }
@@ -135,6 +133,60 @@ std::string SonosNFCPlayerModule::readParameterString(uint8_t *parameterValue, i
     return std::string((const char *)parameterValue, strnlen((const char *)parameterValue, size));
 }
 
+bool SonosNFCPlayerModule::tryParseDeviceCommand(const std::string &command, uint8_t &deviceIndex, uint8_t &percentage, uint8_t &onOff)
+{
+    deviceIndex = -1;
+    percentage = -1;
+    onOff = -1;
+    std::string lowerCaseCommand = "";
+    for (size_t i = 0; i < command.length(); i++)
+    {
+        lowerCaseCommand += std::tolower(command[i]);
+    }
+    if (lowerCaseCommand.rfind("device", 0) != 0)
+    {
+        return false;
+    }
+    std::string deviceCommand = lowerCaseCommand.substr(6);
+
+    size_t first = command.find(':', 6);
+    if (first == std::string::npos)
+    {
+        logDebugP("Command '%s' does not contain ':'", command.c_str());
+        return false;
+    }
+    try
+    {
+        auto device = std::stoi(lowerCaseCommand.substr(6, first - 1));
+        if (device < 1)
+            return false;
+        if (device > ParamDEV_VisibleChannels)
+            return false;
+        deviceIndex = device - 1;
+        auto parameter = command.substr(first + 1);
+        if (parameter == "on")
+        {
+            onOff = 1;
+        }
+        else if (parameter == "off")
+        {
+            onOff = 0;
+        }
+        else
+        {
+            auto percentageValue = std::stoi(parameter);
+            if (percentageValue < 0 || percentageValue > 100)
+                return false;
+            percentage = percentageValue;
+        }
+    }
+    catch (const std::exception &)
+    {
+        return false; // keine gültige Zahl
+    }
+    return true;
+}
+
 void SonosNFCPlayerModule::loop(bool configured)
 {
     handleLeds();
@@ -162,7 +214,7 @@ void SonosNFCPlayerModule::loop(bool configured)
         _currentCard = currentCard;
         if (_currentCard != nullptr)
         {
-            _pulsingInterval = _currentCard->hasCommand("SINGLE") ?  667 : 909;
+            _pulsingInterval = _currentCard->hasCommand("SINGLE") ? 667 : 909;
             _currentPlayHandle = nullptr;
             logInfoP("New card detected");
             logIndentUp();
@@ -175,22 +227,47 @@ void SonosNFCPlayerModule::loop(bool configured)
             {
                 if (_playAllowed)
                 {
+                    for (auto command : _currentCard->getCommands())
+                    {
+                        uint8_t deviceIndex = -1;
+                        uint8_t percentage = -1;
+                        uint8_t onOff = -1;
+                        if (tryParseDeviceCommand(command, deviceIndex, percentage, onOff))
+                        {
+                            if (percentage != -1)
+                            {
+                                auto _channelIndex = deviceIndex;
+                                logDebugP("Setting device with index %d to %d%%", deviceIndex, percentage);
+                                KoDEV_CHPercentage.value(percentage, DPT_Scaling);
+                            }
+                            if (onOff != -1)
+                            {
+                                auto _channelIndex = deviceIndex;
+                                logDebugP("Setting device with index %d to %s", deviceIndex, onOff == 1 ? "ON" : "OFF");
+                                KoDEV_CHSwitch.value(onOff == 1, DPT_Switch);
+                            }
+                        }
+                    }
+                }
+            }
+            else
+                logInfoP("Play not yet allowed (starting phase)");
+
+            if (_currentCard->getUrl().length() > 0)
+            {
+                if (_playAllowed)
+                {
                     if (_currentCard->hasCommand("SHUFFLE"))
                         _mainChannel->shuffle(true);
                     else
                         _mainChannel->shuffle(false);
-
-                    _currentPlayHandle = _mainChannel->start(_currentCard->getUrl().c_str(), _currentCard->getTitle().c_str(), _currentCard->getImageUrl().c_str(), _filePathPrefix.c_str(), true);
-                    if (_secondaryChannel != nullptr)
-                        _secondaryChannel->joinToGroupCoordinator(_mainChannel);
                 }
-                else
-                {
-                    logWarningP("Play not allowed yet, starting up");
-                    _currentPlayHandle = _mainChannel->start(_currentCard->getUrl().c_str(), _currentCard->getTitle().c_str(), _currentCard->getImageUrl().c_str(), _filePathPrefix.c_str(), false);
-          
-                }
+                _currentPlayHandle = _mainChannel->start(_currentCard->getUrl().c_str(), _currentCard->getTitle().c_str(), _currentCard->getImageUrl().c_str(), _filePathPrefix.c_str(), _playAllowed);
+                if (_secondaryChannel != nullptr && _playAllowed)
+                    _secondaryChannel->joinToGroupCoordinator(_mainChannel);
             }
+        
+        
         }
         else
         {
@@ -198,21 +275,27 @@ void SonosNFCPlayerModule::loop(bool configured)
             KoPLY_Card.value(false, DPT_Switch);
             KoPLY_CardId.value("", DPT_String_ASCII);
             handleLeds();
-            if (_mainChannel != nullptr && ParamPLY_StopOnRemoveTag)
+            if (_mainChannel != nullptr && ParamPLY_StopOnRemoveTag && _mainChannel->isPlaying(_currentPlayHandle))
+            {
                 _mainChannel->pause();
+            }
         }
     }
     if (!_playAllowed && _cardReaderState == CardReaderState::CARD_READER_STATE_AVAILABLE || _cardReaderState == CardReaderState::CARD_READER_STATE_IDLE)
     {
         _playAllowed = true;
     }
-  
 }
 
 void SonosNFCPlayerModule::handleLeds()
 {
     _ledFunctionPlayerState.loop();
     _ledFunctionTag.loop();
+}
+
+void SonosNFCPlayerModule::processInputKo(GroupObject &ko)
+{
+   logDebugP("Input KO %d changed", (int) ko.asap());
 }
 
 bool SonosNFCPlayerModule::processCommand(const std::string cmd, bool debugKo)

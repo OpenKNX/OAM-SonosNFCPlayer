@@ -11,85 +11,25 @@ Card::Card(const uint8_t *uid, unsigned int uidLength, const char *content, unsi
         sprintf(buf, "%02X", (uint8_t)uid[i]);
         _uidStr += buf;
     }
-    const char *lineBegin = content;
-    int lineLength = 0;
-    int line = 0;
-    bool previousWasCR = false;
-    for (size_t i = 0; i < length; i++)
+    std::string contentStr(content, length);
+    if (contentStr.rfind('x-file-cifs://192.168.0.1/Share/Storage/Musik/') == 0)
     {
-        auto c = content[i];
-        bool lf = (c == 0x0A);
-        if (lf && previousWasCR)
-        {
-            // skip LF after CR
-            previousWasCR = false;
-            continue;
-        }
-        bool cr = (c == 0x0D);
-        previousWasCR = cr;
-        if (!cr && !lf)
-            lineLength++;
-        bool isLastChar = (i == length - 1);
-        if (cr || lf || isLastChar)
-        {
-            if (line == 0)
-            {
-                _url = std::string(lineBegin, lineLength);
-            }
-            else if (line == 1)
-            {
-                auto commands = std::string(lineBegin, lineLength);
-                std::stringstream ss(commands);
-                std::string item;
-                while (std::getline(ss, item, ';'))
-                {
-                    _commands.push_back(item);
-                }
-            }
-            else if (line == 2)
-            {
-                _imageUrl = std::string(lineBegin, lineLength);
-            }
-            else if (line == 3)
-            {
-                _imageUrl = std::string(lineBegin, lineLength);
-            }
-            else
-            {
-            break;
-            }
-            line++;
-            lineBegin = content + i + 1;
-            lineLength = 0;
-        }
+        // old card format, convert to new
+        contentStr = "uri:" + contentStr;
     }
+    _commands = CommandParser::parse(contentStr);
 }
 
-const std::string &Card::getUrl() const
-{
-    return _url;
-}
-
-const std::string &Card::getTitle() const
-{
-    return _title;
-}
-
-const std::string &Card::getImageUrl() const
-{
-    return _imageUrl;
-}
-
-const std::vector<std::string> &Card::getCommands() const
+const std::vector<Command> &Card::getCommands() const
 {
     return _commands;
 }
 
-bool Card::hasCommand(const std::string &command) const
+bool Card::hasCommand(const std::string &name) const
 {
     for (const auto &cmd : _commands)
     {
-        if (cmd == command)
+        if (cmd.name == name)
             return true;
     }
     return false;
@@ -104,15 +44,12 @@ void Card::logInformation() const
 {
 
     logInfo("Card", "UID: %s", _uidStr.c_str());
-    if (!_url.empty())
-        logInfo("Card", "Url: %s", _url.c_str());
-    if (!_title.empty())
-        logInfo("Card", "Title: %s", _title.c_str());
-    if (!_imageUrl.empty())
-        logInfo("Card", "ImageUrl: %s", _imageUrl.c_str());
     for (const auto &command : _commands)
     {
-        logInfo("Card", "Command: %s", command.c_str());
+        if (command.parameter.length() > 0)
+            logInfo("Card", "%s: '%s'", command.name.c_str(), command.parameter.c_str());
+        else
+            logInfo("Card", "%s", command.name.c_str());
     }
 }
 

@@ -5,8 +5,8 @@
   <op:ETS
     OpenKnxId="0xAE"
     ApplicationNumber="0x2F"
-    ApplicationVersion="0.3.0"
-    ReplacesVersions="0.2 0.1"
+    ApplicationVersion="0.4.0"
+    ReplacesVersions="0.3 0.2 0.1"
     ApplicationRevision="0"
     ProductName="Sonos NFC Player"
     BusCurrent="30"
@@ -49,6 +49,13 @@
   <op:define prefix="PLY" ModuleType="22" 
     share="SonosNFCPlayer.share.xml"
     KoSingleOffset="1200" >
+  </op:define> 
+
+  <op:define prefix="DEV" ModuleType="23" 
+    share="Devices.share.xml"
+    template="Devices.templ.xml"
+    NumChannels="30"
+    KoOffset="1300" >
   </op:define> 
 
   <op:define prefix="LOG" ModuleType="10"

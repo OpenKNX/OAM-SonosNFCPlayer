@@ -36,6 +36,7 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     uint16_t _pulsingInterval = 909;
     CardReaderState _cardReaderState = CardReaderState::CARD_READER_STATE_IDLE;
     std::string readParameterString(uint8_t* parameterValue, int size);
+    bool tryParseDeviceCommand(const std::string &command, uint8_t &deviceIndex, uint8_t &percentage, uint8_t &onOff);
     void handleButtons();
     void handleLeds();
   public:
@@ -45,7 +46,8 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     void init() override;
     void loop(bool configured) override;
     void setup(bool configured) override;
-    bool processCommand(const std::string cmd, bool debugKo);
+    bool processCommand(const std::string cmd, bool debugKo) override;
+    void processInputKo(GroupObject &ko) override;
     void showHelp() override;
     bool hasTag() const;
     bool isPlayingTag() const;
