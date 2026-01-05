@@ -4,6 +4,7 @@
 SonosVolumeController::SonosVolumeController(ESP32Encoder& encoder, SonosChannel* speaker)
     : _encoder(encoder), _speaker(speaker)
 {
+  _encoder.setCount(0);
 }
 
 void SonosVolumeController::loop()

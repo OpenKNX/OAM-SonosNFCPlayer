@@ -137,6 +137,15 @@ Beispiele:
 - Device1:on
 - Device1:50
 
+### TempLedInterval
+Shuffle:&lt;Intervall in ms&gt;
+
+Setzt die Status LED für den Player auf eine andere Intervallfrequenz beim Spielen von NFC-Tags.
+Die Änderung wird beim wechsel des NFC automatisch wieder auf die Standeinstellung 909 (enspricht der Umdehungsgeschwindigkeit von Langspielplatten) gesetzt. 
+
+Beispiel für die Geschwindigkeit einer Singe-Schallplatte:
+- TempLedInterval:667
+
 #### Volume
 Volume:&lt;0-100&gt;
 
@@ -160,6 +169,15 @@ Legt die Lautstärke der Gruppe die am Haupt-Sonoskanal gespielt wird fest.
 
 Beispiel:
 - VolumeGroup:50
+
+#### TempVolumeGroup
+TempVolumeGroup:&lt;0-100&gt;
+
+Legt die Lautstärke der Gruppe die am Haupt-Sonoskanal gespielt wird fest.
+Beim entfernen des Tags, wird wieder die originale Lautstärke hergestellt.
+
+Beispiel:
+- TempVolumeGroup:50
 
 #### Volumne&lt;Lautsprechernummer&gt;
 Volumne&lt;Lautsprechernummer&gt;:&lt;0-100&gt;

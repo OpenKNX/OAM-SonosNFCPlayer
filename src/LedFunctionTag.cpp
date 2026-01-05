@@ -30,7 +30,6 @@ void LedFunctionTag::loop()
     if (ledState == _ledState)
         return;
     _ledState = ledState;
-    logError("LED", "DEBUG: LED Function Tag changed to %d", (int)_ledState);
     switch (_ledState)
     {
         case LedState::LedStateHasNotTag:

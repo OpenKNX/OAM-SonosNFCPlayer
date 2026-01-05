@@ -52,29 +52,26 @@ void SonosNFCPlayerModule::setup(bool configured)
         ESP32Encoder::useInternalWeakPullResistors = puType::up;
         logDebugP("Attaching encoder 1");
         _encoder1.attachHalfQuad(ENCODER1_DT, ENCODER1_CLK);
-        _encoder1.setCount(0);
-
+      
         pinMode(ENCODER2_BUTTON, INPUT_PULLUP);
         ESP32Encoder::useInternalWeakPullResistors = puType::up;
         logDebugP("Attaching encoder 2");
         _encoder2.attachHalfQuad(ENCODER2_DT, ENCODER2_CLK);
-        _encoder2.setCount(0);
-
+      
         pinMode(ENCODER3_BUTTON, INPUT_PULLUP);
         ESP32Encoder::useInternalWeakPullResistors = puType::up;
         logDebugP("Attaching encoder 3");
-        _encoder2.attachHalfQuad(ENCODER3_DT, ENCODER3_CLK);
-        _encoder2.setCount(0);
-
+        _encoder3.attachHalfQuad(ENCODER3_DT, ENCODER3_CLK);
+      
         // init sonos volume
         if (_mainChannel != nullptr)
         {
-            //     _sonosGroupVolumeController = new SonosGroupVolumeController(_encoder1, _mainChannel);
-            //     _sonosVolumeController1 = new SonosVolumeController(_encoder2, _mainChannel);
+            _sonosGroupVolumeController = new SonosGroupVolumeController(_encoder1, _mainChannel);
+            _sonosVolumeController1 = new SonosVolumeController(_encoder2, _mainChannel);
         }
         if (_secondaryChannel != nullptr)
         {
-            //  _sonosVolumeController2 = new SonosVolumeController(_encoder3, _secondaryChannel);
+            _sonosVolumeController2 = new SonosVolumeController(_encoder3, _secondaryChannel);
         }
     }
 }
@@ -130,56 +127,16 @@ std::string SonosNFCPlayerModule::readParameterString(uint8_t *parameterValue, i
     return std::string((const char *)parameterValue, strnlen((const char *)parameterValue, size));
 }
 
-bool SonosNFCPlayerModule::tryParseDeviceCommand(Command &command, uint8_t &deviceIndex, uint8_t &percentage, uint8_t &onOff)
-{
-    deviceIndex = -1;
-    percentage = -1;
-    onOff = -1;
-    uint8_t device = 0;
-    if (!command.isNameWithIndex("device", device))
-        return false;
-    if (device < 1 || device > ParamDEV_VisibleChannels)
-    {
-        logWarningP("Command '%s' contains invalid device %d", command.name.c_str(), device);
-        return false;
-    }
-    try
-    {
-        deviceIndex = device - 1;
-        std::string lowerCaseParameter;
-        for (char c : command.parameter)
-            lowerCaseParameter += std::tolower(c);
-        if (lowerCaseParameter == "on")
-        {
-            onOff = 1;
-        }
-        else if (lowerCaseParameter == "off")
-        {
-            onOff = 0;
-        }
-        else
-        {
-            auto percentageValue = std::stoi(lowerCaseParameter);
-            if (percentageValue < 0 || percentageValue > 100)
-            {
-                logWarningP("Command '%s' contains invalid percentage %d", command.name.c_str(), percentageValue);
-                return false;
-            }
-            percentage = percentageValue;
-        }
-    }
-    catch (const std::exception &e)
-    {
-        logWarningP("Command '%s' contains invalid parameter %s: %s", command.name.c_str(), command.parameter.c_str(), e.what());
-        return false; // keine gültige Zahl
-    }
-    return true;
-}
 
 void SonosNFCPlayerModule::loop(bool configured)
 {
+    if (_lastCommandProcessTime != 0 && _lastCommandProcessTime + 1000 > millis())
+    {
+        _lastCommandProcessTime = 0;
+    }
     handleLeds();
     handleButtons();
+    handleTempVolume();
     if (_cardReader == nullptr)
         return;
     if (openknxSonosModule.isInitialized() == false)
@@ -200,6 +157,7 @@ void SonosNFCPlayerModule::loop(bool configured)
     auto currentCard = _cardReaderState == CardReaderState::CARD_READER_STATE_AVAILABLE ? _cardReader->currentCard() : nullptr;
     if (currentCard != _currentCard)
     {
+        auto previousCard = _currentCard;
         _currentCard = currentCard;
         if (_currentCard != nullptr)
         {
@@ -212,15 +170,19 @@ void SonosNFCPlayerModule::loop(bool configured)
             KoPLY_Card.value(true, DPT_Switch);
             KoPLY_CardId.value(_currentCard->getUid().c_str(), DPT_String_ASCII);
             handleLeds();
+            if (previousCard != nullptr)
+                handleCommands(previousCard->getCommands(), true);
             handleCommands(_currentCard->getCommands());
         }
         else
         {
+            handleLeds();
+            if (previousCard != nullptr)
+                handleCommands(previousCard->getCommands(), true);
             logInfoP("Card removed");
             KoPLY_Card.value(false, DPT_Switch);
             KoPLY_CardId.value("", DPT_String_ASCII);
-            handleLeds();
-            handleCommands(_currentCard->getCommands(), true);
+           
         }
     }
     if (!_playAllowed && _cardReaderState == CardReaderState::CARD_READER_STATE_AVAILABLE || _cardReaderState == CardReaderState::CARD_READER_STATE_IDLE)
@@ -233,11 +195,26 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
 {
     const std::vector<Command> *currentCommands = &commands;
     std::vector<Command> newCommands = {};
-    if (!cardRemoved)
+    bool hasPlayCommand = false;
+    for (auto& command : commands)
+    {
+        if (command.name == "uri" && 
+            !command.parameter.empty())
+        {
+            hasPlayCommand = true;
+            break;
+        }
+    }
+    if (cardRemoved)
+    {
+        resetFromTempVolumeGroup();
+    }
+    else
     {
         // Handle commands from previous card
         if (_commandsForNextCard.size() > 0)
         {
+            if (!hasPlayCommand) notifyCommandProcessing();
             for (auto command : commands)
             {
                 if (command.name.rfind("#", 0) == 0)
@@ -257,10 +234,7 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
             {
                 if (command.name == command.name)
                 {
-                    Command newCommand = command;
-                    newCommand.name = command.name.substr(1); // remove '#' prefix
-                    logDebugP("Adding command from previous card: %s", newCommand.name.c_str());
-                    newCommands.push_back(newCommand);
+                    newCommands.push_back(command);
                 }
             }
             currentCommands = &newCommands;
@@ -270,38 +244,68 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
         for (auto command : commands)
         {
             if (command.name.rfind("#", 0) == 0)
-                _commandsForNextCard.push_back(command);
+            {
+                auto newCommand = command;
+                newCommand.name = command.name.substr(1); // remove '#' prefix
+                _commandsForNextCard.push_back(newCommand);
+            }
         }
     }
+
     std::string uri = "";
     std::string title = "";
     std::string image = "";
+    uint8_t tempPercentage = 255;
+          
     bool pause = false;
     bool continuePlaying = false;
     if (cardRemoved && ParamPLY_StopOnRemoveTag)
     {
         pause = true;
     }
-    for (auto command : *currentCommands)
+    for (Command command /* do not use reference, we make modifications */ : *currentCommands)
     {
-        std::string name = cardRemoved ? (">" + command.name) : command.name;
+        if (cardRemoved)
+        {
+            if (command.name.rfind('>') == 0)
+                command.name = command.name.substr(1);
+            else
+            {
+                logDebugP("Skipping command %s on card removal", command.name.c_str());
+                continue;
+            }
+        }
+        else if (command.name.rfind('>') == 0)
+        {
+            logDebugP("Skipping command %s on card placement", command.name.c_str());
+            continue;
+        }
+        auto& name = command.name;
         if (_playAllowed)
         {
-            uint8_t deviceIndex = -1;
-            uint8_t percentage = -1;
-            uint8_t onOff = -1;
-            if (tryParseDeviceCommand(command, deviceIndex, percentage, onOff))
+            uint8_t deviceIndex = 255;
+            uint8_t percentage = 255;
+            uint8_t onOff = 255;
+           
+            if (command.isNameWithIndex("device", deviceIndex) && command.tryGetParameterAsPercentageOrBool(percentage, onOff))
             {
-                if (percentage != -1)
+                if (deviceIndex < 1 || deviceIndex > ParamDEV_VisibleChannels)
                 {
-                    auto _channelIndex = deviceIndex;
-                    logDebugP("Setting device with index %d to %d%%", deviceIndex, percentage);
+                    logWarningP("Device index %d is out of range", deviceIndex);
+                    continue;
+                }
+                if (percentage != 255)
+                {
+                    if (!hasPlayCommand) notifyCommandProcessing();
+                    auto _channelIndex = deviceIndex - 1;
+                    logDebugP("Setting device with index %d to %d%%, KO: %d", deviceIndex, percentage, (int) KoDEV_CHPercentage.asap());
                     KoDEV_CHPercentage.value(percentage, DPT_Scaling);
                 }
-                if (onOff != -1)
+                if (onOff != 255)
                 {
-                    auto _channelIndex = deviceIndex;
-                    logDebugP("Setting device with index %d to %s", deviceIndex, onOff == 1 ? "ON" : "OFF");
+                   if (!hasPlayCommand) notifyCommandProcessing();
+                    auto _channelIndex = deviceIndex - 1;
+                    logDebugP("Setting device with index %d to %s, KO: %d", deviceIndex, onOff == 1 ? "ON" : "OFF", (int) KoDEV_CHSwitch.asap());
                     KoDEV_CHSwitch.value(onOff == 1, DPT_Switch);
                 }
             }
@@ -309,33 +313,59 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
             {
                 uint8_t percentage = 0;
                 uint8_t channelNumber = 0;
-                if (command.name == "mainspeaker")
+                if (command.name == "templedinterval")
+                {
+                    int value;
+                    if (command.tryGetParameterAsInt(value))
+                    {
+                        if (value > 0)
+                        {
+                            _pulsingInterval = value;
+                            logDebugP("Setting LED pulsing interval to %d ms", _pulsingInterval);
+                        }
+                    }
+                    else if (!cardRemoved)
+                    {
+                        _pulsingInterval = 909;
+                        logDebugP("Reset LED pulsing interval to %d ms", _pulsingInterval);
+                    }
+                }
+                else if (command.name == "mainspeaker")
                 {
                     _mainChannel = _configuredMainChannel;
+                    if (!hasPlayCommand) notifyCommandProcessing();
                 }
                 else if (command.isNameWithIndex("mainspeaker", channelNumber))
                 {
                     auto channel = openknxSonosModule.getChannel(channelNumber - 1);
                     if (channel != nullptr)
+                    {
+                        if (!hasPlayCommand) notifyCommandProcessing();
                         _mainChannel = channel;
+                    }
                     else
                         logWarningP("Sonsos channel %d not found for speaker command", channelNumber);
                 }
                 else if (command.name == "secondaryspeaker")
                 {
                     _secondaryChannel = _configuredSecondaryChannel;
+                    if (!hasPlayCommand) notifyCommandProcessing();
                 }
                 else if (command.isNameWithIndex("secondaryspeaker", channelNumber))
                 {
                     if (channelNumber == 0)
                     {
                         _secondaryChannel = nullptr;
+                        if (!hasPlayCommand) notifyCommandProcessing();
                     }
                     else
                     {
                         auto channel = openknxSonosModule.getChannel(channelNumber - 1);
                         if (channel != nullptr)
+                        {
+                            if (!hasPlayCommand) notifyCommandProcessing();
                             _secondaryChannel = channel;
+                        }
                         else
                             logWarningP("Sonsos channel %d not found for speaker command", channelNumber);
                     }
@@ -343,18 +373,34 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                 else if (_mainChannel != nullptr)
                 {
                     if (name == "shuffle")
+                    {
+                        if (!hasPlayCommand) notifyCommandProcessing();
                         _mainChannel->shuffle(command.getParameterAsBool(true));
-                    else if (name == "volume" && command.TryGetParameterAsPercent(percentage))
+                    }
+                    else if (name == "volume" && command.tryGetParameterAsPercent(percentage))
+                    {
+                        if (!hasPlayCommand) notifyCommandProcessing();
                         _mainChannel->setVolume(percentage);
-                    else if (name == "volumegroup" && command.TryGetParameterAsPercent(percentage))
+                    }
+                    else if (name == "volumegroup" && command.tryGetParameterAsPercent(percentage))
+                    {
+                        if (!hasPlayCommand) notifyCommandProcessing();
                         _mainChannel->setGroupVolume(percentage);
+                    }
+                    else if (name == "tempvolumegroup" && command.tryGetParameterAsPercent(tempPercentage))
+                    {
+                        // will be handled in starting playing
+                    }
                     else if (command.isNameWithIndex("volume", channelNumber))
                     {
                         auto channel = openknxSonosModule.getChannel(channelNumber - 1);
                         if (channel != nullptr)
                         {
-                            if (command.TryGetParameterAsPercent(percentage))
+                            if (command.tryGetParameterAsPercent(percentage))
+                            {
+                                if (!hasPlayCommand) notifyCommandProcessing();
                                 channel->setVolume(percentage);
+                            }
                         }
                         else
                         {
@@ -366,8 +412,11 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                         auto channel = openknxSonosModule.getChannel(channelNumber - 1);
                         if (channel != nullptr)
                         {
-                            if (command.TryGetParameterAsPercent(percentage))
+                            if (command.tryGetParameterAsPercent(percentage))
+                            {
+                                if (!hasPlayCommand) notifyCommandProcessing();
                                 channel->setGroupVolume(percentage);
+                            }
                         }
                         else
                         {
@@ -377,11 +426,14 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                     else if (command.name == "join")
                     {
                         uint8_t channelNumber = 0;
-                        if (command.TryGetParameterAsPercent(channelNumber))
+                        if (command.tryGetParameterAsPercent(channelNumber))
                         {
                             auto channel = openknxSonosModule.getChannel(channelNumber - 1);
                             if (channel != nullptr)
+                            {
+                                if (!hasPlayCommand) notifyCommandProcessing();
                                 channel->joinToGroupCoordinatorOf(_mainChannel);
+                            }
                            
                         }
                         else
@@ -392,11 +444,14 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                     else if (command.name == "unjoin")
                     {
                         uint8_t channelNumber = 0;
-                        if (command.TryGetParameterAsPercent(channelNumber))
+                        if (command.tryGetParameterAsPercent(channelNumber))
                         {
                             auto channel = openknxSonosModule.getChannel(channelNumber - 1);
                             if (channel != nullptr)
+                            {
+                                if (!hasPlayCommand) notifyCommandProcessing();
                                 channel->unjoin();
+                            }
                            
                         }
                         else
@@ -407,8 +462,11 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                 }
                 if (_secondaryChannel != nullptr)
                 {
-                    if (name == "volumesecondary" && command.TryGetParameterAsPercent(percentage))
-                        _secondaryChannel->setVolume(percentage);
+                    if (name == "volumesecondary" && command.tryGetParameterAsPercent(percentage))
+                    {
+                        if (!hasPlayCommand) notifyCommandProcessing();
+                            _secondaryChannel->setVolume(percentage);
+                    }
                 }
             }
         }
@@ -436,12 +494,16 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
     if (!uri.empty())
     {
         _currentPlayHandle = _mainChannel->start(uri.c_str(), title.c_str(), image.c_str(), _filePathPrefix.c_str(), _playAllowed);
+        if (tempPercentage != 255)
+        {
+            setTempVolumeGroup(tempPercentage, _currentPlayHandle);
+        }
         if (_secondaryChannel != nullptr && _playAllowed)
             _secondaryChannel->joinToGroupCoordinatorOf(_mainChannel);
     }
     else if (pause && _playAllowed)
     {
-        if (_mainChannel != nullptr && ParamPLY_StopOnRemoveTag && _mainChannel->isPlaying(_currentPlayHandle))
+        if (_mainChannel != nullptr && ParamPLY_StopOnRemoveTag && _mainChannel->isPlaying(_currentPlayHandle.get()))
         {
             _mainChannel->pause();
         }
@@ -480,10 +542,71 @@ void SonosNFCPlayerModule::togglePlay(bool onlyPlay)
     }
 }
 
+void SonosNFCPlayerModule::notifyCommandProcessing()
+{
+    _lastCommandProcessTime = max(1UL, millis());
+    handleLeds();
+}
+
 void SonosNFCPlayerModule::handleLeds()
 {
     _ledFunctionPlayerState.loop();
     _ledFunctionTag.loop();
+}
+
+void SonosNFCPlayerModule::setTempVolumeGroup(uint8_t percentage, std::shared_ptr<SonosChannelPlayHandle>& playingCheck)
+{
+    if (_tempVolumeChannel == nullptr)
+    {
+        if (_mainChannel == nullptr)
+            return;
+        _tempVolumeGroup = percentage;
+        _tempVolumePlayHandle = playingCheck;
+
+        _originalValumeGroup = _mainChannel->getGroupVolume();
+        _tempVolumeChannel = _mainChannel;
+        _tempTagPlaying = false;
+    }
+    else
+    {
+        _tempVolumeGroup = percentage;
+        _tempVolumePlayHandle = playingCheck;
+        _tempTagPlaying = false;
+    }
+}
+
+void SonosNFCPlayerModule::resetFromTempVolumeGroup()
+{
+    if (_tempVolumeChannel != nullptr)
+    {
+        logDebugP("Restoring from temp volume group and set to %d", _originalValumeGroup);
+        _tempVolumeChannel->setGroupVolume(_originalValumeGroup);
+        _tempVolumeChannel = nullptr;
+        _tempVolumeGroup = 255;
+        _originalValumeGroup = 255;
+        _tempTagPlaying = false;
+    }
+}
+
+void SonosNFCPlayerModule::handleTempVolume()
+{
+    if (_tempVolumeChannel != nullptr)
+    {
+        bool isPlaying = _tempVolumePlayHandle == nullptr || _tempVolumePlayHandle->isPlaying();
+        if (isPlaying == _tempTagPlaying)
+            return;
+        _tempTagPlaying = isPlaying;
+        if (isPlaying)
+        {
+            logDebugP("Temp volume handling: Tag playing state changed to %d", isPlaying);
+            _tempVolumeChannel->setGroupVolume(_tempVolumeGroup);
+        }
+        else
+        {
+            logDebugP("Temp volume handling: Tag playing state changed to %d", isPlaying);
+            _tempVolumeChannel->setGroupVolume(_originalValumeGroup);
+        }
+    }
 }
 
 void SonosNFCPlayerModule::processInputKo(GroupObject &ko)
@@ -532,12 +655,33 @@ bool SonosNFCPlayerModule::isPlayingTag() const
 {
     if (_mainChannel == nullptr)
         return false;
-    return _mainChannel->isPlaying(_currentPlayHandle);
+    return _mainChannel->isPlaying(_currentPlayHandle.get());
 }
 
 CardReaderState SonosNFCPlayerModule::cardReaderState() const
 {
     return _cardReaderState;
+}
+
+PlayerState SonosNFCPlayerModule::playerState() const
+{
+    if (_lastCommandProcessTime != 0)
+    {
+        return PlayerState::PlayerStateCommandProcessing;
+    }
+    switch (_cardReaderState)
+    {
+    case CardReaderState::CARD_READER_ERROR:
+        return PlayerStateCardReaderError;
+    case CardReaderState::CARD_READER_STATE_INITIALIZING:
+        return PlayerStateCardReaderInitializing;
+    case CardReaderState::CARD_READER_STATE_TAG_READING:
+        return PlayerStateCardReaderTagReading;
+    case CardReaderState::CARD_READER_STATE_AVAILABLE:
+        return PlayerStateCardReaderAvailable;
+    default:
+        return PlayerStateIdle;
+    }
 }
 
 uint16_t SonosNFCPlayerModule::getPulsingInterval() const
