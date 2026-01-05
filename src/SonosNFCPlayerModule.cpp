@@ -92,8 +92,7 @@ void SonosNFCPlayerModule::handleButtons()
         logDebugP("Pressed 1 %d", input);
         if (input)
         {
-            if (_mainChannel != nullptr)
-                _mainChannel->togglePause();
+            togglePlay();
         }
     }
 
@@ -283,6 +282,7 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
     std::string title = "";
     std::string image = "";
     bool pause = false;
+    bool continuePlaying = false;
     if (cardRemoved && ParamPLY_StopOnRemoveTag)
     {
         pause = true;
@@ -331,6 +331,10 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
         {
             pause = command.getParameterAsBool(true);
         }
+        else if (name == "continue")
+        {
+            continuePlaying = command.getParameterAsBool(true);
+        }
     }
     if (!uri.empty())
     {
@@ -343,6 +347,38 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
         if (_mainChannel != nullptr && ParamPLY_StopOnRemoveTag && _mainChannel->isPlaying(_currentPlayHandle))
         {
             _mainChannel->pause();
+        }
+    }
+    else if (continuePlaying && _playAllowed)
+    {
+        continuePlay();
+    }
+}
+
+void SonosNFCPlayerModule::continuePlay()
+{
+    togglePlay(true);
+}
+
+void SonosNFCPlayerModule::togglePlay(bool onlyPlay)
+{
+    if (_mainChannel != nullptr)
+    {
+        switch (_mainChannel->getPlayState())
+        {
+        case SonosApiPlayState::Paused_Playback:
+            _mainChannel->play();
+            break;
+        case SonosApiPlayState::Stopped:
+            _mainChannel->start(_currentPlayHandle);
+             break;
+        case SonosApiPlayState::Transitioning:
+        case SonosApiPlayState::Playing:
+            if (!onlyPlay)
+                _mainChannel->pause();
+            break;
+        default:
+            break;
         }
     }
 }

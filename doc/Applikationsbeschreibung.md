@@ -66,6 +66,16 @@ Titel:"Radio Wien; das Beste Radio"
 
 ### Befehle
 
+
+Befehle können beim Auflegen, beim Entfernen oder beim auflegen der nächsten Karte ausgeführt werden.
+Um einen Befehl beim Entfernen der Karte auszuführen, wird der Befehl mit einem '>' Prefix versehen.
+Um einen Befehl beim Auflegen der nächste Karte auszuführen, wird der Befehl mit einem '#' Prefix versehen.
+
+Beispiele:
+- Beim Auflegen Radio Wien abspielen: Uri:"x-rincon-mp3radio://https://orf-live.ors-shoutcast.at/wie-q2a"
+- Beim Entfernen der Karte Radio Wien abspielen: >Uri:"x-rincon-mp3radio://https://orf-live.ors-shoutcast.at/wie-q2a"
+- Beim Auflegen der nächsten Karte Radio Wien abspielen: #Uri:"x-rincon-mp3radio://https://orf-live.ors-shoutcast.at/wie-q2a"
+
 #### URI:&lt;Sonos URI&gt;
 
 ##### Radio
@@ -102,6 +112,22 @@ Beispiel: x-file-cifs:"Pink Floyd/The Wall/"
 
 Dateifreigabe Prefix: //192.168.0.1/Share/Storage/Musik
 Abgespielt wird: //192.168.0.1/Share/Storage/Musik/Pink Floyd/The Wall/
+
+#### Pause 
+Pause:&lt;on/off&gt;
+Pausiert die aktuelle Wiedergabe.
+
+Beim Entfernen wird die Wiedergabe abhängig von der ETS Einstellung '' beendet.
+Die Einstellung kann mit >Pause:on bzw. >Pause:off überladen werden
+
+Achtung: Eine Pause kann nicht durch Pause:off beendet werden. Dies muss durch den Befehl 'continue' erfolgen
+
+### Continue
+Setzt das letzte Medium fort. Ist keine Medium aktiv, wird der aktuelle NFC Tag erneut gestart
+
+### Shuffle
+Shuffle:&lt;on/off&gt;
+Aktiviert / Deaktiviert die Zufallswiedergabe
 
 <!-- DOCEND -->
 ### Programmierung über die NFC Tools App

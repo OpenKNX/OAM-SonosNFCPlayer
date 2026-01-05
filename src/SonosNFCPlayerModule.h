@@ -41,6 +41,8 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     void handleCommands(const std::vector<Command>& commands, bool cardRemoved = false);
     void handleButtons();
     void handleLeds();
+    void continuePlay();
+    void togglePlay(bool onlyPlay = false);
   public:
     const std::string logPrefix() override;
     const std::string name() override;
