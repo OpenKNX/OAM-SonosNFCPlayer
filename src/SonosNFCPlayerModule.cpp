@@ -150,10 +150,11 @@ bool SonosNFCPlayerModule::tryParseDeviceCommand(Command &command, uint8_t &devi
     try
     {
         auto device = std::stoi(deviceIndexStr);
-        if (device < 1)
+        if (device < 1 || device > ParamDEV_VisibleChannels)
+        {
+            logWarningP("Command '%s' contains invalid device %d", command.name.c_str(), device);
             return false;
-        if (device > ParamDEV_VisibleChannels)
-            return false;
+        }
         deviceIndex = device - 1;
         std::string lowerCaseParameter;
         for (char c : command.parameter)
@@ -170,12 +171,16 @@ bool SonosNFCPlayerModule::tryParseDeviceCommand(Command &command, uint8_t &devi
         {
             auto percentageValue = std::stoi(lowerCaseParameter);
             if (percentageValue < 0 || percentageValue > 100)
+            {
+                logWarningP("Command '%s' contains invalid percentage %d", command.name.c_str(), percentageValue);
                 return false;
+            }
             percentage = percentageValue;
         }
     }
-    catch (const std::exception &)
+    catch (const std::exception& e)
     {
+        logWarningP("Command '%s' contains invalid number: %s", command.name.c_str(), e.what());
         return false; // keine gültige Zahl
     }
     return true;

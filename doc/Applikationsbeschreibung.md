@@ -129,6 +129,14 @@ Setzt das letzte Medium fort. Ist keine Medium aktiv, wird der aktuelle NFC Tag 
 Shuffle:&lt;on/off&gt;
 Aktiviert / Deaktiviert die Zufallswiedergabe
 
+### Device
+Device&lt;Geräte nummer&gt;:&lt;on/off/0-100&gt;
+Schaltet ein Gerät oder setzt die Prozent
+
+Beispiele:
+- Device1:on
+- Device1:50
+
 <!-- DOCEND -->
 ### Programmierung über die NFC Tools App
 
