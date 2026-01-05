@@ -50,6 +50,13 @@
     share="SonosNFCPlayer.share.xml">
   </op:define> 
 
+  <op:define prefix="DEV" ModuleType="23" 
+    share="Devices.share.xml"
+    template="Devices.templ.xml"
+    NumChannels="30"
+    KoOffset="1300" >
+  </op:define> 
+
   <op:define prefix="LOG" ModuleType="10"
     share="../lib/OFM-LogicModule/src/Logikmodul.share.xml"
     template="../lib/OFM-LogicModule/src/Logikmodul.templ.xml"

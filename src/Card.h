@@ -1,22 +1,18 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "CommandParser.h"
 
 class Card
 {
     std::string _uidStr;
-    std::string _url; 
-    std::string _title;
-    std::string _imageUrl;
-    std::vector<std::string> _commands;
+    std::vector<Command> _commands;
 public:    
-    Card(const uint8_t* uid, unsigned int uidLength, const char* content, unsigned int length);
+    Card(const uint8_t* uid, unsigned int uidLength, const char* content, size_t length);
     ~Card();
     const std::string& getUid() const;
-    const std::string& getUrl() const;
-    const std::string& getTitle() const;
-    const std::string& getImageUrl() const;
-    const std::vector<std::string>& getCommands() const;
-    bool hasCommand(const std::string& command) const;
+    const std::vector<Command>& getCommands() const;
+    bool hasCommand(const std::string& name) const;
     void logInformation() const;
+    
 };

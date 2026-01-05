@@ -8,19 +8,22 @@ void LedFunctionPlayerState::loop()
     {
         _ledFunctionGroup = openknx.ledFunctions.get(OPENKNX_LEDFUNC_PLY_PLAYER_STATE);
     }
-    auto cardReaderState = openknxSonosNFCPlayer.cardReaderState();
+    auto playerState = openknxSonosNFCPlayer.playerState();
     LedState ledState = LedStateStopped;
     auto pulsingInterval = _lastPulsingInterval;
-    switch (cardReaderState)
+    switch (playerState)
     {
-        case CardReaderState::CARD_READER_STATE_INITIALIZING:
+        case PlayerStateCardReaderInitializing:
             ledState = LedState::LedStateInitialize;
             break;
-        case CardReaderState::CARD_READER_ERROR:
+        case PlayerStateCardReaderError:
             ledState = LedState::LedStateCardError;
             break;
-        case CardReaderState::CARD_READER_STATE_TAG_READING:
+        case PlayerStateCardReaderTagReading:
             ledState = LedState::LedStateTagReading;
+            break;
+        case PlayerStateCommandProcessing:
+            ledState = LedState::LedStateCommandProcessing;
             break;
         default:
             if (openknxSonosNFCPlayer.isPlayingTag())
@@ -38,9 +41,7 @@ void LedFunctionPlayerState::loop()
         return;
     _ledState = ledState;
     _lastPulsingInterval = pulsingInterval;
-   
-    logError("LED", "DEBUG: LED Function Player State changed to %d", (int)_ledState);
-
+  
     switch (_ledState)
     {
         case LedState::LedStateInitialize:
@@ -60,6 +61,10 @@ void LedFunctionPlayerState::loop()
         case LedState::LedStatePlayingTag:
             _ledFunctionGroup->color(OpenKNX::Led::Color::Blue);
             _ledFunctionGroup->pulsing(pulsingInterval);
+            return;
+        case LedState::LedStateCommandProcessing:
+            _ledFunctionGroup->color(OpenKNX::Led::Color::White);
+            _ledFunctionGroup->flash(100);
             return;
     }
 }

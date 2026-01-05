@@ -12,7 +12,8 @@ class LedFunctionPlayerState
         LedStateInitialize = 2,
         LedStateTagReading = 3,
         LedStateCardError = 4,
-        LedStatePlayingTag = 5
+        LedStatePlayingTag = 5,
+        LedStateCommandProcessing = 6
     };
     LedState _ledState = LedState::LedStateNotInitialized;
     uint16_t _lastPulsingInterval = 0;
