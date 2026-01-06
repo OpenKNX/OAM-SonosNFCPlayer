@@ -691,6 +691,8 @@ PlayerState SonosNFCPlayerModule::playerState() const
     case CardReaderState::TagReading:
         return PlayerState::CardReaderTagReading;
     case CardReaderState::Available:
+        if (isPlayingTag())
+           return PlayerState::PlayingTag;
         return PlayerState::CardReaderAvailable;
     default:
         if (isPlayingTag())
