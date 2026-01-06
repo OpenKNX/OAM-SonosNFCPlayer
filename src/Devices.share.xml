@@ -34,7 +34,7 @@
 					</Static>
 					<Dynamic>
 						<Channel Name="MainChannel%TT%" Text="Geräte" Number="%PREFIX%" Id="%AID%_CH-%TT%" Icon="texture-box">
-							<ParameterBlock Id="%AID%_PB-nnn" Name="Devices" Text="Geräte" Icon="lamps-outline" HelpContext="Empty">
+							<ParameterBlock Id="%AID%_PB-nnn" Name="Devices" Text="Geräte" Icon="lamps-outline" HelpContext="DEV-Geraete">
 
 								<ParameterSeparator Id="%AID%_PS-nnn" Text="Über Player steuerbare Geräte" UIHint="Headline" />
 					

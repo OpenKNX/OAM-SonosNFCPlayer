@@ -44,7 +44,7 @@
                   <when test="&gt;=%C%">
                     <ParameterSeparator Id="%AID%_PS-nnn" Text="Gerät %C%" />
                     <!-- Kanal Name -->
-                    <ParameterRefRef  IndentLevel="1" RefId="%AID%_P-%TT%%CC%000_R-%TT%%CC%00001" HelpContext="Empty" />
+                    <ParameterRefRef  IndentLevel="1" RefId="%AID%_P-%TT%%CC%000_R-%TT%%CC%00001" HelpContext="%DOC%" />
 
                     <ParameterBlock Id="%AID%_PB-nnn" Name="Device%C%" Text="Gerät %C%" ShowInComObjectTree="true" Inline="true" >
                       <!-- Switch-->
@@ -87,7 +87,7 @@
                   <when test="&gt;=%C%">
                     <ParameterSeparator Id="%AID%_PS-nnn" Text="Gerät %C%" />
                     <!-- Kanal Name -->
-                    <ParameterRefRef  IndentLevel="1" RefId="%AID%_P-%TT%%CC%000_R-%TT%%CC%00001" HelpContext="Empty" />
+                    <ParameterRefRef  IndentLevel="1" RefId="%AID%_P-%TT%%CC%000_R-%TT%%CC%00001" HelpContext="%DOC%" />
                     <!-- Switch-->
                     <ComObjectRefRef RefId="%AID%_O-%TT%%CC%000_R-%TT%%CC%00000" />
                     <!-- Switch Feedback-->

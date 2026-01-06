@@ -48,7 +48,8 @@
   </op:define>
 
   <op:define prefix="PLY" ModuleType="22" 
-    share="SonosNFCPlayer.share.xml">
+    share="SonosNFCPlayer.share.xml"
+    KoSingleOffset="1200" >
   </op:define> 
  
   <op:define prefix="DEV" ModuleType="23" 
