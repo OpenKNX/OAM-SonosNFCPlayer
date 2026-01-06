@@ -1,4 +1,4 @@
-# Applikationsbeschreibung Smart Home Bridge
+# Applikationsbeschreibung Sonos NFC-Player
 
 ## Wichtige Hinweise
 
@@ -137,7 +137,7 @@ Beispiele:
 - Device1:on
 - Device1:50
 
-### TempLedInterval
+#### TempLedInterval
 Shuffle:&lt;Intervall in ms&gt;
 
 Setzt die Status LED für den Player auf eine andere Intervallfrequenz beim Spielen von NFC-Tags.
