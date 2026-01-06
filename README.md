@@ -1,7 +1,10 @@
 # OAM-SonosNFCPlayer
 
 Diese SW implementiert einen virtueller Plattenspieler für Sonos-Lautsprecher.
+
 Als Platten werden NFC-Tags zur Auswahl der Sound-Quelle verwendet.
+
+![Player](./doc/Player.jpg)
 
 ## Features
 
@@ -49,6 +52,10 @@ Um die vorkomplierte Firmware zu nutzen, muss folgende Pin Belegung verwenden:
 | 17             | Drehwinkelgeber 3 Button
 | 18             | PN532 auf HSU (Uart) konfiguriert RX
 | 19             | PN532 auf HSU (Uart) konfiguriert RX
+
+
+Prototype ohne angeschlossene Drehwinkelgeber:
+![Prototype](./doc/Prototype.jpg)
 
 ## NFC Tags
 

@@ -5,6 +5,7 @@
 * Diese KNXprod wird nicht von der KNX Association offiziell unterstützt!
 * Die Erzeugung der KNXprod geschieht auf Eure eigene Verantwortung!
 
+
 ## Module
 
 Die Sonos App besteht aus folgenden Modulen:
@@ -17,12 +18,13 @@ Die Sonos App besteht aus folgenden Modulen:
 - [Logik](https://github.com/OpenKNX/OFM-LogicModule/blob/v1/doc/Applikationsbeschreibung-Logik.md)
 - [Funktionsblöcke](https://github.com/OpenKNX/OFM-FunctionBlocks/blob/v1/doc/Applikationsbeschreibung-FunctionBlocks.md)
 
-
-
 <!-- DOC -->
 ## Player
 
 Der Player spielt Quellen deren Referenz in einem Standard NFC Tag hinterlegt ist auf dem Sonos System ab.
+
+<!-- DOC Skip="1"-->
+![Player](Player.jpg)
 
 Die NFC Tags müssen mit einem NFC-NDEF-Record des Types 'Text' programmiert werden.
 
