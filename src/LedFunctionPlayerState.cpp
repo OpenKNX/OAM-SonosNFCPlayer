@@ -9,62 +9,39 @@ void LedFunctionPlayerState::loop()
         _ledFunctionGroup = openknx.ledFunctions.get(OPENKNX_LEDFUNC_PLY_PLAYER_STATE);
     }
     auto playerState = openknxSonosNFCPlayer.playerState();
-    LedState ledState = LedStateStopped;
-    auto pulsingInterval = _lastPulsingInterval;
-    switch (playerState)
-    {
-        case PlayerStateCardReaderInitializing:
-            ledState = LedState::LedStateInitialize;
-            break;
-        case PlayerStateCardReaderError:
-            ledState = LedState::LedStateCardError;
-            break;
-        case PlayerStateCardReaderTagReading:
-            ledState = LedState::LedStateTagReading;
-            break;
-        case PlayerStateCommandProcessing:
-            ledState = LedState::LedStateCommandProcessing;
-            break;
-        default:
-            if (openknxSonosNFCPlayer.isPlayingTag())
-            {
-                ledState = LedState::LedStatePlayingTag;
-                pulsingInterval = openknxSonosNFCPlayer.getPulsingInterval();
-            }
-            else
-            {
-                ledState = LedState::LedStateStopped;
-            }
-            break;
-    }
-    if (ledState == _ledState && pulsingInterval == _lastPulsingInterval)
+    auto pulsingInterval = openknxSonosNFCPlayer.getPulsingInterval();
+    if (playerState == _lastPlayerState && pulsingInterval == _lastPulsingInterval)
         return;
-    _ledState = ledState;
+    _lastPlayerState = playerState;
     _lastPulsingInterval = pulsingInterval;
   
-    switch (_ledState)
+    switch (playerState)
     {
-        case LedState::LedStateInitialize:
+        case PlayerState::Idle:
+        case PlayerState::CardReaderAvailable:
             _ledFunctionGroup->off();
             return;
-        case LedState::LedStateCardError:
+        case PlayerState::CardReaderError:
             _ledFunctionGroup->color(OpenKNX::Led::Color::Red);
             _ledFunctionGroup->blinking(250);
             return;
-        case LedState::LedStateTagReading:
+        case PlayerState::CardReaderTagReading:
             _ledFunctionGroup->color(OpenKNX::Led::Color::Green);
             _ledFunctionGroup->on();
             return;
-        case LedState::LedStateStopped:
+        case PlayerState::CardReaderInitializing:
             _ledFunctionGroup->off();
             return;
-        case LedState::LedStatePlayingTag:
+        case PlayerState::PlayingTag:
             _ledFunctionGroup->color(OpenKNX::Led::Color::Blue);
             _ledFunctionGroup->pulsing(pulsingInterval);
             return;
-        case LedState::LedStateCommandProcessing:
+        case PlayerState::CommandProcessing:
             _ledFunctionGroup->color(OpenKNX::Led::Color::White);
             _ledFunctionGroup->flash(100);
+            return;
+        default:
+            _ledFunctionGroup->color(OpenKNX::Led::Color::Green);
             return;
     }
 }

@@ -21,8 +21,8 @@
 
 
   <op:config name="%BASE_Info1LedFunc%" value="402"></op:config>
-  <op:config name="%BASE_Info2LedFunc%" value="0"></op:config>
-  <op:config name="%BASE_Info3LedFunc%" value="0"></op:config>
+  <op:config name="%BASE_Info2LedFunc%" value="403"></op:config>
+  <op:config name="%BASE_Info3LedFunc%" value="400"></op:config>
   <op:config name="%BASE_Info1LedFunc_Access%" value="ReadWrite"></op:config>
   <op:config name="%BASE_Info2LedFunc_Access%" value="ReadWrite"></op:config>
   <op:config name="%BASE_Info3LedFunc_Access%" value="ReadWrite"></op:config>

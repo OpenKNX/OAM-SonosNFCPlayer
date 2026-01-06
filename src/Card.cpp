@@ -48,7 +48,7 @@ void Card::logInformation() const
     for (const auto &command : _commands)
     {
         if (command.parameter.length() > 0)
-            logInfo("Card", "%s: '%s'", command.name.c_str(), command.parameter.c_str());
+            logInfo("Card", "%s:'%s'", command.name.c_str(), command.parameter.c_str());
         else
             logInfo("Card", "%s", command.name.c_str());
     }

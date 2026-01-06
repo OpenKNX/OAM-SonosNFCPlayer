@@ -4,19 +4,18 @@
 #include <string>
 #include <memory>
 
-enum CardReaderState
+enum class CardReaderState
 {
-    CARD_READER_STATE_INITIALIZING,
-    CARD_READER_STATE_IDLE,
-    CARD_READER_ERROR,
-    CARD_READER_STATE_TAG_READING,
-    CARD_READER_STATE_AVAILABLE,
-
+    Initializing = 0,
+    Idle,
+    Error,
+    TagReading,
+    Available,
 };
 
 class CardReader
 {
-    CardReaderState _state = CARD_READER_STATE_INITIALIZING;
+    CardReaderState _state = CardReaderState::Initializing;
     uint32_t _versionData = 0;
     PN532 _pn532;
     NfcAdapter _nfcAdapter;

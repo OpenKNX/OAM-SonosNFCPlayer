@@ -4,6 +4,7 @@
 #include "SonosVolumeController.h"
 #include "SonosGroupVolumeController.h"
 #include <ESP32Encoder.h>
+#include "PlayerState.h"
 
 SonosNFCPlayerModule openknxSonosNFCPlayer;
 
@@ -154,7 +155,7 @@ void SonosNFCPlayerModule::loop(bool configured)
         _cardReaderState = cardReaderState;
         logDebugP("Card reader changed: %d", (int)cardReaderState);
     }
-    auto currentCard = _cardReaderState == CardReaderState::CARD_READER_STATE_AVAILABLE ? _cardReader->currentCard() : nullptr;
+    auto currentCard = _cardReaderState == CardReaderState::Available ? _cardReader->currentCard() : nullptr;
     if (currentCard != _currentCard)
     {
         auto previousCard = _currentCard;
@@ -185,7 +186,7 @@ void SonosNFCPlayerModule::loop(bool configured)
            
         }
     }
-    if (!_playAllowed && _cardReaderState == CardReaderState::CARD_READER_STATE_AVAILABLE || _cardReaderState == CardReaderState::CARD_READER_STATE_IDLE)
+    if (!_playAllowed && _cardReaderState == CardReaderState::Available || _cardReaderState == CardReaderState::Idle)
     {
         _playAllowed = true;
     }
@@ -332,42 +333,54 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                 }
                 else if (command.name == "mainspeaker")
                 {
-                    _mainChannel = _configuredMainChannel;
-                    if (!hasPlayCommand) notifyCommandProcessing();
-                }
-                else if (command.isNameWithIndex("mainspeaker", channelNumber))
-                {
-                    auto channel = openknxSonosModule.getChannel(channelNumber - 1);
-                    if (channel != nullptr)
+                    if (command.parameter.empty())
                     {
-                        if (!hasPlayCommand) notifyCommandProcessing();
-                        _mainChannel = channel;
+                        _mainChannel = _configuredMainChannel;
+                        logDebugP("Setting main speaker to configured channel");
+                         if (!hasPlayCommand) notifyCommandProcessing();
                     }
-                    else
-                        logWarningP("Sonsos channel %d not found for speaker command", channelNumber);
-                }
-                else if (command.name == "secondaryspeaker")
-                {
-                    _secondaryChannel = _configuredSecondaryChannel;
-                    if (!hasPlayCommand) notifyCommandProcessing();
-                }
-                else if (command.isNameWithIndex("secondaryspeaker", channelNumber))
-                {
-                    if (channelNumber == 0)
-                    {
-                        _secondaryChannel = nullptr;
-                        if (!hasPlayCommand) notifyCommandProcessing();
-                    }
-                    else
+                    else if (command.tryGetParameterAsPercent(channelNumber))
                     {
                         auto channel = openknxSonosModule.getChannel(channelNumber - 1);
                         if (channel != nullptr)
                         {
+                            _mainChannel = channel;
+                            logDebugP("Setting main speaker to %d", channelNumber);
                             if (!hasPlayCommand) notifyCommandProcessing();
-                            _secondaryChannel = channel;
                         }
                         else
                             logWarningP("Sonsos channel %d not found for speaker command", channelNumber);
+                    }
+                   
+                }
+                else if (command.name == "secondaryspeaker")
+                {
+                    if (command.parameter.empty())
+                    {
+                        _secondaryChannel = _configuredSecondaryChannel;
+                        logDebugP("Setting secondary speaker to configured channel");
+                        if (!hasPlayCommand) notifyCommandProcessing();
+                    }
+                    else if (command.tryGetParameterAsPercent(channelNumber))
+                    {
+                        if (channelNumber == 0)
+                        {
+                            _secondaryChannel = nullptr;
+                            logDebugP("Disabling secondary speaker");
+                            if (!hasPlayCommand) notifyCommandProcessing();
+                        }
+                        else
+                        {
+                            auto channel = openknxSonosModule.getChannel(channelNumber - 1);
+                            if (channel != nullptr)
+                            {
+                                _secondaryChannel = channel;
+                                logDebugP("Setting secondary speaker to %d", channelNumber);
+                                if (!hasPlayCommand) notifyCommandProcessing();
+                            }
+                            else
+                                logWarningP("Sonsos channel %d not found for speaker command", channelNumber);
+                        }
                     }
                 }
                 else if (_mainChannel != nullptr)
@@ -646,9 +659,9 @@ void SonosNFCPlayerModule::showHelp()
 
 bool SonosNFCPlayerModule::hasTag() const
 {
-    return _cardReaderState == CardReaderState::CARD_READER_ERROR ||
-           _cardReaderState == CardReaderState::CARD_READER_STATE_TAG_READING ||
-           _cardReaderState == CardReaderState::CARD_READER_STATE_AVAILABLE;
+    return _cardReaderState == CardReaderState::Error ||
+           _cardReaderState == CardReaderState::TagReading ||
+           _cardReaderState == CardReaderState::Available;
 }
 
 bool SonosNFCPlayerModule::isPlayingTag() const
@@ -667,20 +680,22 @@ PlayerState SonosNFCPlayerModule::playerState() const
 {
     if (_lastCommandProcessTime != 0)
     {
-        return PlayerState::PlayerStateCommandProcessing;
+        return PlayerState::CommandProcessing;
     }
     switch (_cardReaderState)
     {
-    case CardReaderState::CARD_READER_ERROR:
-        return PlayerStateCardReaderError;
-    case CardReaderState::CARD_READER_STATE_INITIALIZING:
-        return PlayerStateCardReaderInitializing;
-    case CardReaderState::CARD_READER_STATE_TAG_READING:
-        return PlayerStateCardReaderTagReading;
-    case CardReaderState::CARD_READER_STATE_AVAILABLE:
-        return PlayerStateCardReaderAvailable;
+    case CardReaderState::Error:
+        return PlayerState::CardReaderError;
+    case CardReaderState::Initializing:
+        return PlayerState::CardReaderInitializing;
+    case CardReaderState::TagReading:
+        return PlayerState::CardReaderTagReading;
+    case CardReaderState::Available:
+        return PlayerState::CardReaderAvailable;
     default:
-        return PlayerStateIdle;
+        if (isPlayingTag())
+           return PlayerState::PlayingTag;
+        return PlayerState::Idle;
     }
 }
 

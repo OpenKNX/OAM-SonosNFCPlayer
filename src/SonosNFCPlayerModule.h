@@ -7,21 +7,11 @@
 #include "LedFunctionPlayerState.h"
 #include "LedFunctionTag.h"
 #include "SonosChannel.h"
+#include "PlayerState.h"
 
 class SonosChannel;
 class SonosVolumeController;
 class SonosGroupVolumeController;
-
-enum PlayerState
-{
-    PlayerStateIdle,
-    PlayerStateCardReaderInitializing,
-    PlayerStateCardReaderError,
-    PlayerStateCardReaderTagReading,
-    PlayerStateCardReaderAvailable,
-    PlayerStateCommandProcessing
-
-};
 
 class SonosNFCPlayerModule : public OpenKNX::Module
 {
@@ -49,7 +39,7 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     std::string _filePathPrefix;
     std::shared_ptr<Card> _currentCard = nullptr;
     uint16_t _pulsingInterval = 909;
-    CardReaderState _cardReaderState = CardReaderState::CARD_READER_STATE_IDLE;
+    volatile CardReaderState _cardReaderState = CardReaderState::Idle;
     std::vector<Command> _commandsForNextCard;
     std::string readParameterString(uint8_t* parameterValue, int size);
     void handleCommands(const std::vector<Command>& commands, bool cardRemoved = false);

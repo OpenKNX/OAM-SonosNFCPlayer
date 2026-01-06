@@ -155,14 +155,14 @@ void CardReader::setup()
     }
     else
     {
-        _state = CardReaderState::CARD_READER_ERROR;
+        _state = CardReaderState::Error;
     }
     logInformation();
 }
 
 void CardReader::nfcTask()
 {
-    _state = CardReaderState::CARD_READER_STATE_IDLE;
+    _state = CardReaderState::Idle;
     const unsigned long pollInterval = 50; // ms
     bool tagPresent = false;
     uint8_t *lastUid[7] = {0};
@@ -184,7 +184,7 @@ void CardReader::nfcTask()
         {
             if (tagReadFailedCount > 0)
             {
-                logErrorP("Tag read succeeded after %d failed attempts", tagReadFailedCount);
+                logWarningP("Tag read succeeded after %d failed attempts", tagReadFailedCount);
                 tagReadFailedCount = 0;
             }
             if (lastUidLength == uidLength && memcmp(lastUid, uid, uidLength) == 0)
@@ -194,7 +194,7 @@ void CardReader::nfcTask()
             else
             {
                 tagPresent = true;     
-                _state = CardReaderState::CARD_READER_STATE_TAG_READING;
+                _state = CardReaderState::TagReading;
                 NfcTag tag = _nfcAdapter.read();
                 std::string result = handleTag(tag);
 
@@ -213,7 +213,7 @@ void CardReader::nfcTask()
                     memset(lastUid, 0, sizeof(lastUid));
                     memcpy(lastUid, uid, uidLength);
                     _currentCard = std::make_shared<Card>(uid, uidLength, result.c_str(), result.length());
-                    _state = CardReaderState::CARD_READER_STATE_AVAILABLE;
+                    _state = CardReaderState::Available;
                 }
             }
         }
@@ -227,7 +227,7 @@ void CardReader::nfcTask()
                 tagPresent = false;
                 tagReadFailedCount = 0;
                 lastUidLength = 0;
-                _state = CardReaderState::CARD_READER_STATE_IDLE;
+                _state = CardReaderState::Idle;
                 _currentCard = nullptr;
             }
             else
@@ -235,9 +235,9 @@ void CardReader::nfcTask()
                 continue; // try again
             }
         }
-        if (_state == CardReaderState::CARD_READER_STATE_INITIALIZING)
+        if (_state == CardReaderState::Initializing)
         {
-            _state = CardReaderState::CARD_READER_STATE_IDLE;
+            _state = CardReaderState::Idle;
         }
 
         vTaskDelay(pdMS_TO_TICKS(pollInterval));

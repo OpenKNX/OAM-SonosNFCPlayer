@@ -5,20 +5,15 @@
 
 class LedFunctionTag
 {
-    unsigned long _lastStoppedTime = 0;
-    enum LedState
+    enum class LedState
     {
-        LedStateNotInitialized = 0,
-        LedStateHasNotTag = 1,
-        LedStateHasTag = 2,
-        LedStateStopped = 3,
+        NotInitialized = 0,
+        HasNotTag = 1,
+        HasTag = 2,
 
     };
-    LedState _ledState = LedState::LedStateNotInitialized;
-
-#ifdef OPENKNX_LEDFUNC_BASE_TIME
+    LedState _ledState = LedState::NotInitialized;
     OpenKNX::Led::FunctionGroup* _ledFunctionGroup = nullptr;
-#endif
 public:
     void loop();
 };
