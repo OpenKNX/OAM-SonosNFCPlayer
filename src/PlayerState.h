@@ -6,7 +6,7 @@ enum class PlayerState
     CardReaderInitializing,
     CardReaderError,
     CardReaderTagReading,
-    CardReaderAvailable,
+    CardReaderTagAvailable,
     CommandProcessing,
     PlayingTag
 

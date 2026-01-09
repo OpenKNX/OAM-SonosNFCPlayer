@@ -28,6 +28,7 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     bool _playAllowed = false;
     
     unsigned  long _lastCommandProcessTime = 0;
+    bool _handlingCardInProgress = false;
     CardReader* _cardReader;
     SonosChannel* _mainChannel;
     SonosChannel* _secondaryChannel;
@@ -68,7 +69,7 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     void processInputKo(GroupObject &ko) override;
     void showHelp() override;
     bool hasTag() const;
-    bool isPlayingTag() const;
+    TagPlayState isPlayingTag() const;
     uint16_t getPulsingInterval() const;
     PlayerState playerState() const;
     CardReaderState cardReaderState() const;

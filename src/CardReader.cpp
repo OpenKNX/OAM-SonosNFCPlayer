@@ -213,7 +213,7 @@ void CardReader::nfcTask()
                     memset(lastUid, 0, sizeof(lastUid));
                     memcpy(lastUid, uid, uidLength);
                     _currentCard = std::make_shared<Card>(uid, uidLength, result.c_str(), result.length());
-                    _state = CardReaderState::Available;
+                    _state = CardReaderState::TagAvailable;
                 }
             }
         }
@@ -221,7 +221,7 @@ void CardReader::nfcTask()
         {
 
             tagReadFailedCount++;
-            if (tagReadFailedCount >= 5)
+            if (tagReadFailedCount >= 6)
             {
                 // reset last tag info after several failed reads
                 tagPresent = false;
@@ -232,6 +232,7 @@ void CardReader::nfcTask()
             }
             else
             {
+                vTaskDelay(pdMS_TO_TICKS(pollInterval));
                 continue; // try again
             }
         }

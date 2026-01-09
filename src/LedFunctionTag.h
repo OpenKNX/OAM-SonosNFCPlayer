@@ -14,6 +14,7 @@ class LedFunctionTag
     };
     LedState _ledState = LedState::NotInitialized;
     OpenKNX::Led::FunctionGroup* _ledFunctionGroup = nullptr;
+    const char* getLedStateName(LedState state);
 public:
     void loop();
 };

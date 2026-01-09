@@ -10,7 +10,7 @@ enum class CardReaderState
     Idle,
     Error,
     TagReading,
-    Available,
+    TagAvailable,
 };
 
 class CardReader

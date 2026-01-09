@@ -9,6 +9,7 @@ class LedFunctionPlayerState
     PlayerState _lastPlayerState = PlayerState::Idle;
     uint16_t _lastPulsingInterval = 0;
     OpenKNX::Led::FunctionGroup *_ledFunctionGroup = nullptr;
+    const char* getPlayerStateName(PlayerState state);
 public:
     void loop();
 };

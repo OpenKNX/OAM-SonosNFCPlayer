@@ -155,11 +155,12 @@ void SonosNFCPlayerModule::loop(bool configured)
         _cardReaderState = cardReaderState;
         logDebugP("Card reader changed: %d", (int)cardReaderState);
     }
-    auto currentCard = _cardReaderState == CardReaderState::Available ? _cardReader->currentCard() : nullptr;
+    auto currentCard = _cardReaderState == CardReaderState::TagAvailable ? _cardReader->currentCard() : nullptr;
     if (currentCard != _currentCard)
     {
         auto previousCard = _currentCard;
         _currentCard = currentCard;
+        _handlingCardInProgress = true;
         if (_currentCard != nullptr)
         {
             _pulsingInterval = _currentCard->hasCommand("SINGLE") ? 667 : 909;
@@ -185,8 +186,9 @@ void SonosNFCPlayerModule::loop(bool configured)
             KoPLY_CardId.value("", DPT_String_ASCII);
            
         }
+        _handlingCardInProgress = false;
     }
-    if (!_playAllowed && _cardReaderState == CardReaderState::Available || _cardReaderState == CardReaderState::Idle)
+    if (!_playAllowed && _cardReaderState == CardReaderState::TagAvailable || _cardReaderState == CardReaderState::Idle)
     {
         _playAllowed = true;
     }
@@ -516,7 +518,7 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
     }
     else if (pause && _playAllowed)
     {
-        if (_mainChannel != nullptr && ParamPLY_StopOnRemoveTag && _mainChannel->isPlaying(_currentPlayHandle.get()))
+        if (_mainChannel != nullptr && ParamPLY_StopOnRemoveTag && _mainChannel->isPlaying(_currentPlayHandle.get()) == TagPlayState::Playing)
         {
             _mainChannel->pause();
         }
@@ -605,7 +607,7 @@ void SonosNFCPlayerModule::handleTempVolume()
 {
     if (_tempVolumeChannel != nullptr)
     {
-        bool isPlaying = _tempVolumePlayHandle == nullptr || _tempVolumePlayHandle->isPlaying();
+        bool isPlaying = _tempVolumePlayHandle == nullptr || _tempVolumePlayHandle->isPlaying() != TagPlayState::Stopped;
         if (isPlaying == _tempTagPlaying)
             return;
         _tempTagPlaying = isPlaying;
@@ -661,13 +663,13 @@ bool SonosNFCPlayerModule::hasTag() const
 {
     return _cardReaderState == CardReaderState::Error ||
            _cardReaderState == CardReaderState::TagReading ||
-           _cardReaderState == CardReaderState::Available;
+           _cardReaderState == CardReaderState::TagAvailable;
 }
 
-bool SonosNFCPlayerModule::isPlayingTag() const
+TagPlayState SonosNFCPlayerModule::isPlayingTag() const
 {
     if (_mainChannel == nullptr)
-        return false;
+        return TagPlayState::Stopped;
     return _mainChannel->isPlaying(_currentPlayHandle.get());
 }
 
@@ -682,6 +684,10 @@ PlayerState SonosNFCPlayerModule::playerState() const
     {
         return PlayerState::CommandProcessing;
     }
+    if (_handlingCardInProgress)
+    {
+        return PlayerState::CardReaderTagReading;
+    }
     switch (_cardReaderState)
     {
     case CardReaderState::Error:
@@ -690,13 +696,20 @@ PlayerState SonosNFCPlayerModule::playerState() const
         return PlayerState::CardReaderInitializing;
     case CardReaderState::TagReading:
         return PlayerState::CardReaderTagReading;
-    case CardReaderState::Available:
-        if (isPlayingTag())
-           return PlayerState::PlayingTag;
-        return PlayerState::CardReaderAvailable;
+    case CardReaderState::TagAvailable:
+        switch (isPlayingTag())
+        {
+        case TagPlayState::Playing:
+            return PlayerState::PlayingTag;
+        case TagPlayState::WaitForResponse:
+            return PlayerState::CardReaderTagReading;
+        default:
+            return PlayerState::CardReaderTagAvailable;
+        }
+    case CardReaderState::Idle:
+        return PlayerState::Idle;
     default:
-        if (isPlayingTag())
-           return PlayerState::PlayingTag;
+        logError(const_cast<SonosNFCPlayerModule*>(this)->logPrefix() , "Unknown card reader state: %d", (int)_cardReaderState);
         return PlayerState::Idle;
     }
 }

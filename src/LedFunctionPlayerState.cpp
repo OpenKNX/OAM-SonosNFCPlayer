@@ -1,6 +1,28 @@
 #include "LedFunctionPlayerState.h"
 #include "SonosNFCPlayerModule.h"
 
+const char* LedFunctionPlayerState::getPlayerStateName(PlayerState state)
+{
+    switch (state)
+    {
+        case PlayerState::CardReaderInitializing:
+            return "CardReaderInitializing";
+        case PlayerState::Idle:
+            return "Idle";
+        case PlayerState::CardReaderTagAvailable:
+            return "CardReaderTagAvailable";
+        case PlayerState::CardReaderTagReading:
+            return "CardReaderTagReading";
+        case PlayerState::PlayingTag:
+            return "PlayingTag";
+        case PlayerState::CommandProcessing:
+            return "CommandProcessing";
+        case PlayerState::CardReaderError:
+            return "CardReaderError";
+        default:
+            return "Unknown";
+    }
+}
 
 void LedFunctionPlayerState::loop()
 {
@@ -12,13 +34,17 @@ void LedFunctionPlayerState::loop()
     auto pulsingInterval = openknxSonosNFCPlayer.getPulsingInterval();
     if (playerState == _lastPlayerState && pulsingInterval == _lastPulsingInterval)
         return;
+    logDebug("StateLED", "Player state changed from %s to %s", getPlayerStateName(_lastPlayerState), getPlayerStateName(playerState));
     _lastPlayerState = playerState;
     _lastPulsingInterval = pulsingInterval;
   
     switch (playerState)
     {
+        case PlayerState::CardReaderInitializing:
+            _ledFunctionGroup->off();
+            return;
         case PlayerState::Idle:
-        case PlayerState::CardReaderAvailable:
+        case PlayerState::CardReaderTagAvailable:
             _ledFunctionGroup->off();
             return;
         case PlayerState::CardReaderError:
@@ -29,9 +55,7 @@ void LedFunctionPlayerState::loop()
             _ledFunctionGroup->color(OpenKNX::Led::Color::Green);
             _ledFunctionGroup->on();
             return;
-        case PlayerState::CardReaderInitializing:
-            _ledFunctionGroup->off();
-            return;
+        
         case PlayerState::PlayingTag:
             _ledFunctionGroup->color(OpenKNX::Led::Color::Blue);
             _ledFunctionGroup->pulsing(pulsingInterval);
