@@ -2,6 +2,7 @@
 
 Der Player spielt Quellen deren Referenz in einem Standard NFC Tag hinterlegt ist auf dem Sonos System ab.
 
+
 Die NFC Tags müssen mit einem NFC-NDEF-Record des Types 'Text' programmiert werden.
 
 ### Programmierung der NFC Tags

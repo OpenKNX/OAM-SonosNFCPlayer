@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <?xml-model href="../../Organization/knxprod-support/knx_project_20/knx-editor.xsd" type="application/xml" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <KNX xmlns:op="http://github.com/OpenKNX/OpenKNXproducer" xmlns="http://knx.org/xml/project/20" CreatedBy="KNX MT" ToolVersion="5.1.255.16695">
- 
+
 
   <!-- Prepare: Not ready to use -->
   <op:config name="%NET_ServiceHTTP%" value="0" />
@@ -15,35 +15,150 @@
             <ParameterTypes>
 
               <!-- Status LEDs-->
-							<ParameterType Id="%AID%_PT-SLEDFunc" Name="SLEDFunc">
-								<TypeRestriction Base="Value" SizeInBit="16" UIHint="DropDown">
-								<Enumeration Text="Player: Status" Value="402" Id="%ENID%" />
-                <Enumeration Text="Player: Tag Vorhanden" Value="403" Id="%ENID%" />
-								</TypeRestriction>
-							</ParameterType>
-
+              <ParameterType Id="%AID%_PT-SLEDFunc" Name="SLEDFunc">
+                <TypeRestriction Base="Value" SizeInBit="16" UIHint="DropDown">
+                  <Enumeration Text="Player: Status" Value="402" Id="%ENID%" />
+                  <Enumeration Text="Player: Tag Vorhanden" Value="403" Id="%ENID%" />
+                </TypeRestriction>
+              </ParameterType>
 
               <ParameterType Id="%AID%_PT-PLYFileSharePrefix" Name="FileSharePrefix">
                 <TypeText SizeInBit="400" />
               </ParameterType>
-             
+
+              <ParameterType Id="%AID%_PT-PLYControllerFunction" Name="ControllerFunction">
+                <TypeRestriction Base="Value" SizeInBit="4" UIHint="DropDown">
+                  <Enumeration Text="Lautstärke" Value="0" Id="%ENID%" />
+                  <Enumeration Text="Gruppenlautstärke" Value="1" Id="%ENID%" />
+                  <Enumeration Text="Geräte Prozent Steuern" Value="2" Id="%ENID%" />
+                </TypeRestriction>
+              </ParameterType>
+
+              <ParameterType Id="%AID%_PT-PLYChannelSelection" Name="ChannelSelection">
+                <TypeRestriction Base="Value" SizeInBit="4" UIHint="DropDown">
+                  <Enumeration Text="Sonos-Hauptkanal" Value="0" Id="%ENID%" />
+                  <Enumeration Text="Sonos-Zweitkanal" Value="1" Id="%ENID%" />
+                  <Enumeration Text="Lautsprechernummer" Value="2" Id="%ENID%" />
+                </TypeRestriction>
+              </ParameterType>
+
+              <ParameterType Id="%AID%_PT-PLYButtonFunction" Name="ButtonFunction">
+                <TypeRestriction Base="Value" SizeInBit="4" UIHint="DropDown">
+                  <Enumeration Text="Pause/Start" Value="0" Id="%ENID%" />
+                  <Enumeration Text="Vorheriger Titel" Value="1" Id="%ENID%" />
+                  <Enumeration Text="Nächster Titel" Value="2" Id="%ENID%" />
+                  <Enumeration Text="Gerät Ein-/Ausschalten" Value="3" Id="%ENID%" />
+                </TypeRestriction>
+              </ParameterType>
+
+
             </ParameterTypes>
             <Parameters>
               <Union SizeInBit="424">
                 <Memory CodeSegment="%MID%" Offset="0" BitOffset="0" />
                 <!-- File share prefix -->
-                <Parameter Offset="0"  BitOffset="0"  Id="%AID%_UP-%TT%00001" Name="FileSharePrefix"   ParameterType="%AID%_PT-PLYFileSharePrefix"       Text="Dateifreigabe Präfix" Value="//192.168.0.1/Share/" />
+                <Parameter Offset="0" BitOffset="0" Id="%AID%_UP-%TT%00001" Name="FileSharePrefix" ParameterType="%AID%_PT-PLYFileSharePrefix" Text="Dateifreigabe Präfix" Value="//192.168.0.1/Share/" />
                 <!-- ^^^ need 50 bytes ^^^ -->
                 <!-- Main channel -->
-                <Parameter Offset="50"  BitOffset="0" Id="%AID%_UP-%TT%00002" Name="MainChannel"       ParameterType="%AID%_PT-SONNumChannelsWithout0"   Text="Haupt-Sonoskanal" Value="1" />
+                <Parameter Offset="50" BitOffset="0" Id="%AID%_UP-%TT%00002" Name="MainChannel" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Haupt-Sonoskanal" Value="1" />
                 <!-- Secondary channel -->
-                <Parameter Offset="51"  BitOffset="0" Id="%AID%_UP-%TT%00003" Name="SecondaryChannel"  ParameterType="%AID%_PT-SONNumChannels"           Text="Zweit-Sonoskanal (0 = deaktiviert)" Value="0" />
+                <Parameter Offset="51" BitOffset="0" Id="%AID%_UP-%TT%00003" Name="SecondaryChannel" ParameterType="%AID%_PT-SONNumChannels" Text="Zweit-Sonoskanal (0 = deaktiviert)" Value="0" />
                 <!-- Stop playing on remove tag -->
-                <Parameter Offset="52"  BitOffset="0" Id="%AID%_UP-%TT%00004" Name="StopOnRemoveTag"   ParameterType="%AID%_PT-OnOffYesNo"              Text="Stoppt Wiedergabe beim Entfernen der Karte" Value="0" />
+                <Parameter Offset="52" BitOffset="0" Id="%AID%_UP-%TT%00004" Name="StopOnRemoveTag" ParameterType="%AID%_PT-OnOffYesNo" Text="Stoppt Wiedergabe beim Entfernen der Karte" Value="0" />
                 <!-- 7 bits free -->
               </Union>
 
-           
+              <Union SizeInBit="32">
+                <Memory CodeSegment="%MID%" Offset="53" BitOffset="0" />
+
+                <!-- Rotary Control 1 -->
+                <Parameter Offset="0" BitOffset="0" Id="%AID%_UP-%TT%01001" Name="RotaryController1" ParameterType="%AID%_PT-PLYControllerFunction" Text="Drehen" Value="1" />
+                <!-- ^^^need 4 bits ^^^-->
+                <!-- Rotary Control 1 Channel Selection -->
+                <Parameter Offset="0" BitOffset="4" Id="%AID%_UP-%TT%01002" Name="RotaryController1ChSelect" ParameterType="%AID%_PT-PLYChannelSelection" Text="Kanal" Value="0" />
+                <!-- ^^^need 4 bits ^^^-->
+
+                <!-- Rotary Control 1 Sonos -->
+                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%01003" Name="RotaryController1Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <!-- Rotary Control 1 Device -->
+                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%01004" Name="RotaryController1Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+
+
+                <!-- Button 1 -->
+                <Parameter Offset="2" BitOffset="0" Id="%AID%_UP-%TT%01005" Name="Button1" ParameterType="%AID%_PT-PLYButtonFunction" Text="Drücken" Value="0" />
+                <!-- ^^^need 4 bits ^^^-->
+                <!-- Button 1 Channel Selection -->
+                <Parameter Offset="2" BitOffset="4" Id="%AID%_UP-%TT%01006" Name="Button1ChSelect" ParameterType="%AID%_PT-PLYChannelSelection" Text="Kanal" Value="0" />
+                <!-- ^^^need 4 bits ^^^-->
+
+                <!-- Button 1 Sonos -->
+                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%01007" Name="Button1Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <!-- Button 1 Device -->
+                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%01008" Name="Button1Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+
+              </Union>
+
+
+              <Union SizeInBit="32">
+                <Memory CodeSegment="%MID%" Offset="57" BitOffset="0" />
+
+                <!-- Rotary Control 2 -->
+                <Parameter Offset="0" BitOffset="0" Id="%AID%_UP-%TT%02001" Name="RotaryController2" ParameterType="%AID%_PT-PLYControllerFunction" Text="Drehen" Value="0" />
+                <!-- ^^^need 4 bits ^^^-->
+                <!-- Rotary Control 2 Channel Selection -->
+                <Parameter Offset="0" BitOffset="4" Id="%AID%_UP-%TT%02002" Name="RotaryController2ChSelect" ParameterType="%AID%_PT-PLYChannelSelection" Text="Kanal" Value="0" />
+                <!-- ^^^need 4 bits ^^^-->
+
+                <!-- Rotary Control 2 Sonos -->
+                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%02003" Name="RotaryController2Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <!-- Rotary Control 2 Device -->
+                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%02004" Name="RotaryController2Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+
+
+                <!-- Button 2 -->
+                <Parameter Offset="2" BitOffset="0" Id="%AID%_UP-%TT%02005" Name="Button2" ParameterType="%AID%_PT-PLYButtonFunction" Text="Drücken" Value="1" />
+                <!-- ^^^need 4 bits ^^^-->
+                <!-- Button 2 Channel Selection -->
+                <Parameter Offset="2" BitOffset="4" Id="%AID%_UP-%TT%02006" Name="Button2ChSelect" ParameterType="%AID%_PT-PLYChannelSelection" Text="Kanal" Value="0" />
+                <!-- ^^^need 4 bits ^^^-->
+
+                <!-- Button 2 Sonos -->
+                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%02007" Name="Button2Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <!-- Button 2 Device -->
+                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%02008" Name="Button2Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+
+              </Union>
+
+              <Union SizeInBit="32">
+                <Memory CodeSegment="%MID%" Offset="61" BitOffset="0" />
+
+                <!-- Rotary Control 3 -->
+                <Parameter Offset="0" BitOffset="0" Id="%AID%_UP-%TT%03001" Name="RotaryController3" ParameterType="%AID%_PT-PLYControllerFunction" Text="Drehen" Value="0" />
+                <!-- ^^^need 4 bits ^^^-->
+                <!-- Rotary Control 3 Channel Selection -->
+                <Parameter Offset="0" BitOffset="4" Id="%AID%_UP-%TT%03002" Name="RotaryController3ChSelect" ParameterType="%AID%_PT-PLYChannelSelection" Text="Kanal" Value="1" />
+                <!-- ^^^need 4 bits ^^^-->
+
+                <!-- Rotary Control 3 Sonos -->
+                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%03003" Name="RotaryController3Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <!-- Rotary Control 3 Device -->
+                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%03004" Name="RotaryController3Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+
+
+                <!-- Button 3 -->
+                <Parameter Offset="2" BitOffset="0" Id="%AID%_UP-%TT%03005" Name="Button3" ParameterType="%AID%_PT-PLYButtonFunction" Text="Drücken" Value="2" />
+                <!-- ^^^need 4 bits ^^^-->
+                <!-- Button 3 Channel Selection -->
+                <Parameter Offset="2" BitOffset="4" Id="%AID%_UP-%TT%03006" Name="Button3ChSelect" ParameterType="%AID%_PT-PLYChannelSelection" Text="Kanal" Value="0" />
+                <!-- ^^^need 4 bits ^^^-->
+
+                <!-- Button 3 Sonos -->
+                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%03007" Name="Button3Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <!-- Button 3 Device -->
+                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%03008" Name="Button3Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+
+
+              </Union>
 
             </Parameters>
             <ParameterRefs>
@@ -55,18 +170,86 @@
               <ParameterRef Id="%AID%_UP-%TT%00003_R-%TT%0000300" RefId="%AID%_UP-%TT%00003" />
               <!-- Stop playing on remove tag -->
               <ParameterRef Id="%AID%_UP-%TT%00004_R-%TT%0000400" RefId="%AID%_UP-%TT%00004" />
+             
+              <!-- Rotary Control 1 -->
+              <ParameterRef Id="%AID%_UP-%TT%01001_R-%TT%0100100" RefId="%AID%_UP-%TT%01001" />
+              <!-- Rotary Control 1 Channel Selection -->
+              <ParameterRef Id="%AID%_UP-%TT%01002_R-%TT%0100200" RefId="%AID%_UP-%TT%01002" />
+              <!-- Rotary Control 1 Sonos -->
+              <ParameterRef Id="%AID%_UP-%TT%01003_R-%TT%0100300" RefId="%AID%_UP-%TT%01003" />
+              <!-- Rotary Control 1 Device -->
+              <ParameterRef Id="%AID%_UP-%TT%01004_R-%TT%0100400" RefId="%AID%_UP-%TT%01004" />
+              <!-- Button 1 -->
+              <ParameterRef Id="%AID%_UP-%TT%01005_R-%TT%0100500" RefId="%AID%_UP-%TT%01005" />
+              <!-- Button 1 Channel Selection -->
+              <ParameterRef Id="%AID%_UP-%TT%01006_R-%TT%0100600" RefId="%AID%_UP-%TT%01006" />
+              <!-- Button 1 Sonos -->
+              <ParameterRef Id="%AID%_UP-%TT%01007_R-%TT%0100700" RefId="%AID%_UP-%TT%01007" />
+              <!-- Button 1 Device -->
+              <ParameterRef Id="%AID%_UP-%TT%01008_R-%TT%0100800" RefId="%AID%_UP-%TT%01008" />
+
+              <!-- Rotary Control 2 -->
+              <ParameterRef Id="%AID%_UP-%TT%02001_R-%TT%0200100" RefId="%AID%_UP-%TT%02001" />
+              <!-- Rotary Control 2 Channel Selection -->
+              <ParameterRef Id="%AID%_UP-%TT%02002_R-%TT%0200200" RefId="%AID%_UP-%TT%02002" />
+              <!-- Rotary Control 2 Sonos -->
+              <ParameterRef Id="%AID%_UP-%TT%02003_R-%TT%0200300" RefId="%AID%_UP-%TT%02003" />
+              <!-- Rotary Control 2 Device -->
+              <ParameterRef Id="%AID%_UP-%TT%02004_R-%TT%0200400" RefId="%AID%_UP-%TT%02004" />
+              <!-- Button 2 -->
+              <ParameterRef Id="%AID%_UP-%TT%02005_R-%TT%0200500" RefId="%AID%_UP-%TT%02005" />
+              <!-- Button 2 Channel Selection -->
+              <ParameterRef Id="%AID%_UP-%TT%02006_R-%TT%0200600" RefId="%AID%_UP-%TT%02006" />
+              <!-- Button 2 Sonos -->
+              <ParameterRef Id="%AID%_UP-%TT%02007_R-%TT%0200700" RefId="%AID%_UP-%TT%02007" />
+              <!-- Button 2 Device -->
+              <ParameterRef Id="%AID%_UP-%TT%02008_R-%TT%0200800" RefId="%AID%_UP-%TT%02008" />  
+
+              <!-- Rotary Control 3 -->
+              <ParameterRef Id="%AID%_UP-%TT%03001_R-%TT%0300100" RefId="%AID%_UP-%TT%03001" />
+              <!-- Rotary Control 3 Channel Selection -->
+              <ParameterRef Id="%AID%_UP-%TT%03002_R-%TT%0300200" RefId="%AID%_UP-%TT%03002" />
+              <!-- Rotary Control 3 Sonos -->
+              <ParameterRef Id="%AID%_UP-%TT%03003_R-%TT%0300300" RefId="%AID%_UP-%TT%03003" />
+              <!-- Rotary Control 3 Device -->
+              <ParameterRef Id="%AID%_UP-%TT%03004_R-%TT%0300400" RefId="%AID%_UP-%TT%03004" />
+              <!-- Button 3 -->
+              <ParameterRef Id="%AID%_UP-%TT%03005_R-%TT%0300500" RefId="%AID%_UP-%TT%03005" />
+              <!-- Button 3 Channel Selection -->
+              <ParameterRef Id="%AID%_UP-%TT%03006_R-%TT%0300600" RefId="%AID%_UP-%TT%03006" />
+              <!-- Button 3 Sonos -->
+              <ParameterRef Id="%AID%_UP-%TT%03007_R-%TT%0300700" RefId="%AID%_UP-%TT%03007" />
+              <!-- Button 3 Device -->
+              <ParameterRef Id="%AID%_UP-%TT%03008_R-%TT%0300800" RefId="%AID%_UP-%TT%03008" />  
+
             </ParameterRefs>
             <ComObjectTable>
               <!-- Valid card -->
-              <ComObject Id="%AID%_O-%TT%00001" Name="Card" Number="1" Text="Gültige Karte vorhanden"  FunctionText="Player: Ausgang" ObjectSize="1 Bit" DatapointType="DPST-1-11" ReadFlag="Enabled" WriteFlag="Disabled" CommunicationFlag="Enabled" TransmitFlag="Enabled" UpdateFlag="Disabled" ReadOnInitFlag="Disabled"  />
+              <ComObject Id="%AID%_O-%TT%00001" Name="Card" Number="1" Text="Gültige Karte vorhanden" FunctionText="Player: Ausgang" ObjectSize="1 Bit" DatapointType="DPST-1-11" ReadFlag="Enabled" WriteFlag="Disabled" CommunicationFlag="Enabled" TransmitFlag="Enabled" UpdateFlag="Disabled" ReadOnInitFlag="Disabled" />
               <!-- Card Id -->
-              <ComObject Id="%AID%_O-%TT%00002" Name="CardId" Number="2" Text="Karten-ID"  FunctionText="Player: Ausgang" ObjectSize="14 Bytes" DatapointType="DPST-16-0" ReadFlag="Enabled" WriteFlag="Disabled" CommunicationFlag="Enabled" TransmitFlag="Enabled" UpdateFlag="Disabled" ReadOnInitFlag="Disabled"  />
+              <ComObject Id="%AID%_O-%TT%00002" Name="CardId" Number="2" Text="Karten-ID" FunctionText="Player: Ausgang" ObjectSize="14 Bytes" DatapointType="DPST-16-0" ReadFlag="Enabled" WriteFlag="Disabled" CommunicationFlag="Enabled" TransmitFlag="Enabled" UpdateFlag="Disabled" ReadOnInitFlag="Disabled" />
+              <!-- Main Channel -->
+              <ComObject Id="%AID%_O-%TT%00003" Name="MainChannel"  Number="3" Text="Hauptkanal" FunctionText="Player: Eingang, Szenenummer ≙ Lautsprecher Nummer" ObjectSize="1 Byte" DatapointType="DPST-17-1" ReadFlag="Disabled" WriteFlag="Enabled" CommunicationFlag="Enabled" TransmitFlag="Disabled" UpdateFlag="Disabled" ReadOnInitFlag="Enabled" /> 
+              <!-- Main Channel Status -->
+              <ComObject Id="%AID%_O-%TT%00004" Name="MainChannelStatus" Number="4" Text="Hauptkanal Status" FunctionText="Player: Ausgang, Szenenummer ≙ Lautsprecher Nummer" ObjectSize="1 Byte" DatapointType="DPST-17-1"  ReadFlag="Enabled" WriteFlag="Disabled" CommunicationFlag="Enabled" TransmitFlag="Enabled" UpdateFlag="Disabled" ReadOnInitFlag="Disabled" />
+              <!-- Secondary Channel -->
+              <ComObject Id="%AID%_O-%TT%00005" Name="SecondaryChannel"  Number="5" Text="Zweitkanal" FunctionText="Player: Eingang, Szenenummer ≙ Lautsprecher Nummer / Szene 64 ≙ Nicht verwenden" ObjectSize="1 Byte" DatapointType="DPST-17-1" ReadFlag="Disabled" WriteFlag="Enabled" CommunicationFlag="Enabled" TransmitFlag="Disabled" UpdateFlag="Disabled" ReadOnInitFlag="Enabled" /> 
+              <!-- Secondary Channel Status -->
+              <ComObject Id="%AID%_O-%TT%00006" Name="SecondaryChannelStatus" Number="6" Text="Zweitkanal Status" FunctionText="Player: Ausgang, Szenenummer ≙ Lautsprecher Nummer" ObjectSize="1 Byte" DatapointType="DPST-17-1" ReadFlag="Enabled" WriteFlag="Disabled" CommunicationFlag="Enabled" TransmitFlag="Enabled" UpdateFlag="Disabled" ReadOnInitFlag="Disabled" />
             </ComObjectTable>
             <ComObjectRefs>
               <!-- Valid card -->
               <ComObjectRef Id="%AID%_O-%TT%00001_R-%TT%0000100" RefId="%AID%_O-%TT%00001" />
               <!-- Card Id -->
               <ComObjectRef Id="%AID%_O-%TT%00002_R-%TT%0000200" RefId="%AID%_O-%TT%00002" />
+              <!-- Main Channel -->
+              <ComObjectRef Id="%AID%_O-%TT%00003_R-%TT%0000300" RefId="%AID%_O-%TT%00003" />
+              <!-- Main Channel Status -->
+              <ComObjectRef Id="%AID%_O-%TT%00004_R-%TT%0000400" RefId="%AID%_O-%TT%00004" />
+              <!-- Secondary Channel -->
+              <ComObjectRef Id="%AID%_O-%TT%00005_R-%TT%0000500" RefId="%AID%_O-%TT%00005" />
+              <!-- Secondary Channel Status -->
+              <ComObjectRef Id="%AID%_O-%TT%00006_R-%TT%0000600" RefId="%AID%_O-%TT%00006" />
             </ComObjectRefs>
           </Static>
           <Dynamic>
@@ -75,11 +258,19 @@
                 <ParameterSeparator Id="%AID%_PS-nnn" Text="Player" UIHint="Headline" />
                 <ParameterSeparator Id="%AID%_PS-nnn" Text="Version: %ModuleVersion%" />
                 <ParameterSeparator Id="%AID%_PS-nnn" Text="" UIHint="HorizontalRuler" />
-              
+
                 <!-- Valid card -->
                 <ComObjectRefRef RefId="%AID%_O-%TT%00001_R-%TT%0000100" />
                 <!-- Card Id -->
                 <ComObjectRefRef RefId="%AID%_O-%TT%00002_R-%TT%0000200" />
+                <!-- Main Channel -->
+                <ComObjectRefRef RefId="%AID%_O-%TT%00003_R-%TT%0000300" />
+                <!-- Main Channel Status -->
+                <ComObjectRefRef RefId="%AID%_O-%TT%00004_R-%TT%0000400" />
+                <!-- Secondary Channel -->
+                <ComObjectRefRef RefId="%AID%_O-%TT%00005_R-%TT%0000500" />
+                <!-- Secondary Channel Status -->
+                <ComObjectRefRef RefId="%AID%_O-%TT%00006_R-%TT%0000600" />
 
                 <ParameterSeparator Id="%AID%_PS-nnn" Text="Einstellungen" UIHint="Headline" />
                 <!-- Main channel -->
@@ -88,10 +279,140 @@
                 <ParameterRefRef RefId="%AID%_UP-%TT%00003_R-%TT%0000300" IndentLevel="1" HelpContext="%DOC%" />
                 <!-- Stop playing on remove tag -->
                 <ParameterRefRef RefId="%AID%_UP-%TT%00004_R-%TT%0000400" IndentLevel="1" HelpContext="%DOC%" />
-               
+
                 <!-- File share prefix -->
                 <ParameterRefRef RefId="%AID%_UP-%TT%00001_R-%TT%0000100" IndentLevel="1" HelpContext="%DOC%" />
-                
+
+
+              </ParameterBlock>
+              <ParameterBlock Id="%AID%_PB-nnn" Name="RotaryControl1" Text="Drehregler 1" Icon="knob" HelpContext="PLY-Drehregler-1-3">
+                <ParameterSeparator Id="%AID%_PS-nnn" Text="Drehregler 1" UIHint="Headline" />
+                <ParameterSeparator Id="%AID%_PS-nnn" Text="" UIHint="HorizontalRuler" />
+
+                <!-- Rotary Control 1 -->
+                <ParameterRefRef RefId="%AID%_UP-%TT%01001_R-%TT%0100100" IndentLevel="1" HelpContext="%DOC%" />
+                <choose ParamRefId="%AID%_UP-%TT%01001_R-%TT%0100100">
+                  <when test="0 1">
+                    <!-- Rotary Control 1 Channel Selection -->
+                    <ParameterRefRef RefId="%AID%_UP-%TT%01002_R-%TT%0100200" IndentLevel="2" HelpContext="%DOC%" />
+                    <choose ParamRefId="%AID%_UP-%TT%01002_R-%TT%0100200">
+                      <when test="2">
+                         <!-- Rotary Control 1 Sonos -->
+                        <ParameterRefRef RefId="%AID%_UP-%TT%01003_R-%TT%0100300" IndentLevel="3" HelpContext="%DOC%" />
+                      </when>
+                    </choose>
+                  </when>
+                  <when test="2">
+                    <!-- Rotary Control 1 Device -->
+                    <ParameterRefRef RefId="%AID%_UP-%TT%01004_R-%TT%0100400" IndentLevel="2" HelpContext="%DOC%" />
+                  </when>
+                </choose>
+                <!-- Button 1 -->
+                <ParameterRefRef RefId="%AID%_UP-%TT%01005_R-%TT%0100500" IndentLevel="1" HelpContext="%DOC%" />
+                <choose ParamRefId="%AID%_UP-%TT%01005_R-%TT%0100500">
+                  <when test="0 1 2">
+                    <!-- Button 1 Channel Selection -->
+                    <ParameterRefRef RefId="%AID%_UP-%TT%01006_R-%TT%0100600" IndentLevel="2" HelpContext="%DOC%" />
+                    <choose ParamRefId="%AID%_UP-%TT%01006_R-%TT%0100600">
+                      <when test="2">
+                         <!-- Button 1 Sonos -->
+                        <ParameterRefRef RefId="%AID%_UP-%TT%01007_R-%TT%0100700" IndentLevel="3" HelpContext="%DOC%" />
+                      </when>
+                    </choose>
+                  </when>
+                  <when test="3">
+                    <!-- Button 1 Device -->
+                    <ParameterRefRef RefId="%AID%_UP-%TT%01008_R-%TT%0100800" IndentLevel="2" HelpContext="%DOC%" />
+                  </when>
+                </choose>
+
+              </ParameterBlock>
+
+              <ParameterBlock Id="%AID%_PB-nnn" Name="RotaryControl2" Text="Drehregler 2" Icon="knob" HelpContext="PLY-Drehregler-1-3">
+                <ParameterSeparator Id="%AID%_PS-nnn" Text="Drehregler 2" UIHint="Headline" />
+                <ParameterSeparator Id="%AID%_PS-nnn" Text="" UIHint="HorizontalRuler" />
+
+                <!-- Rotary Control 2 -->
+                <ParameterRefRef RefId="%AID%_UP-%TT%02001_R-%TT%0200100" IndentLevel="1" HelpContext="%DOC%" />
+                <choose ParamRefId="%AID%_UP-%TT%02001_R-%TT%0200100">
+                  <when test="0 1">
+                    <!-- Rotary Control 2 Channel Selection -->
+                    <ParameterRefRef RefId="%AID%_UP-%TT%02002_R-%TT%0200200" IndentLevel="2" HelpContext="%DOC%" />
+                    <choose ParamRefId="%AID%_UP-%TT%02002_R-%TT%0200200">
+                      <when test="2">
+                         <!-- Rotary Control 2 Sonos -->
+                        <ParameterRefRef RefId="%AID%_UP-%TT%02003_R-%TT%0200300" IndentLevel="3" HelpContext="%DOC%" />
+                      </when>
+                    </choose>
+                  </when>
+                  <when test="2">
+                    <!-- Rotary Control 2 Device -->
+                    <ParameterRefRef RefId="%AID%_UP-%TT%02004_R-%TT%0200400" IndentLevel="2" HelpContext="%DOC%" />
+                  </when>
+                </choose>
+                <!-- Button 2 -->
+                <ParameterRefRef RefId="%AID%_UP-%TT%02005_R-%TT%0200500" IndentLevel="1" HelpContext="%DOC%" />
+                <choose ParamRefId="%AID%_UP-%TT%02005_R-%TT%0200500">
+                  <when test="0 1 2">
+                    <!-- Button 2 Channel Selection -->
+                    <ParameterRefRef RefId="%AID%_UP-%TT%02006_R-%TT%0200600" IndentLevel="2" HelpContext="%DOC%" />
+                    <choose ParamRefId="%AID%_UP-%TT%02006_R-%TT%0200600">
+                      <when test="2">
+                         <!-- Button 2 Sonos -->
+                        <ParameterRefRef RefId="%AID%_UP-%TT%02007_R-%TT%0200700" IndentLevel="3" HelpContext="%DOC%" />
+                      </when>
+                    </choose>
+                  </when>
+                  <when test="3">
+                    <!-- Button 2 Device -->
+                    <ParameterRefRef RefId="%AID%_UP-%TT%02008_R-%TT%0200800" IndentLevel="2" HelpContext="%DOC%" />
+                  </when>
+                </choose>
+
+              </ParameterBlock>
+
+
+              <ParameterBlock Id="%AID%_PB-nnn" Name="RotaryControl3" Text="Drehregler 3" Icon="knob" HelpContext="PLY-Drehregler-1-3">
+                <ParameterSeparator Id="%AID%_PS-nnn" Text="Drehregler 3" UIHint="Headline" />
+                <ParameterSeparator Id="%AID%_PS-nnn" Text="" UIHint="HorizontalRuler" />
+
+                <!-- Rotary Control 3 -->
+                <ParameterRefRef RefId="%AID%_UP-%TT%03001_R-%TT%0300100" IndentLevel="1" HelpContext="%DOC%" />
+                <choose ParamRefId="%AID%_UP-%TT%03001_R-%TT%0300100">
+                  <when test="0 1">
+                    <!-- Rotary Control 3 Channel Selection -->
+                    <ParameterRefRef RefId="%AID%_UP-%TT%03002_R-%TT%0300200" IndentLevel="2" HelpContext="%DOC%" />
+                    <choose ParamRefId="%AID%_UP-%TT%03002_R-%TT%0300200">
+                      <when test="2">
+                         <!-- Rotary Control 3 Sonos -->
+                        <ParameterRefRef RefId="%AID%_UP-%TT%03003_R-%TT%0300300" IndentLevel="3" HelpContext="%DOC%" />
+                      </when>
+                    </choose>
+                  </when>
+                  <when test="2">
+                    <!-- Rotary Control 3 Device -->
+                    <ParameterRefRef RefId="%AID%_UP-%TT%03004_R-%TT%0300400" IndentLevel="2" HelpContext="%DOC%" />
+                  </when>
+                </choose>
+                <!-- Button 2 -->
+                <ParameterRefRef RefId="%AID%_UP-%TT%03005_R-%TT%0300500" IndentLevel="1" HelpContext="%DOC%" />
+                <choose ParamRefId="%AID%_UP-%TT%03005_R-%TT%0300500">
+                  <when test="0 1 2">
+                    <!-- Button 2 Channel Selection -->
+                    <ParameterRefRef RefId="%AID%_UP-%TT%03006_R-%TT%0300600" IndentLevel="2" HelpContext="%DOC%" />
+                    <choose ParamRefId="%AID%_UP-%TT%03006_R-%TT%0300600">
+                      <when test="2">
+                         <!-- Button 2 Sonos -->
+                        <ParameterRefRef RefId="%AID%_UP-%TT%03007_R-%TT%0300700" IndentLevel="3" HelpContext="%DOC%" />
+                      </when>
+                    </choose>
+                  </when>
+                  <when test="3">
+                    <!-- Button 3 Device -->
+                     <ParameterRefRef RefId="%AID%_UP-%TT%03008_R-%TT%0300800" IndentLevel="2" HelpContext="%DOC%" />
+                  </when>
+                </choose>
+
               </ParameterBlock>
 
             </Channel>

@@ -8,10 +8,12 @@
 #include "LedFunctionTag.h"
 #include "SonosChannel.h"
 #include "PlayerState.h"
+#include "ChannelSelection.h"
 
 class SonosChannel;
-class SonosVolumeController;
-class SonosGroupVolumeController;
+class RotaryControl;
+class Button;
+
 
 class SonosNFCPlayerModule : public OpenKNX::Module
 {
@@ -29,26 +31,34 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     
     unsigned  long _lastCommandProcessTime = 0;
     bool _handlingCardInProgress = false;
+    bool _settingVolumeInProgress = false;
     CardReader* _cardReader;
     SonosChannel* _mainChannel;
     SonosChannel* _secondaryChannel;
     SonosChannel* _configuredMainChannel;
     SonosChannel* _configuredSecondaryChannel;
-    SonosGroupVolumeController* _sonosGroupVolumeController = nullptr;
-    SonosVolumeController* _sonosVolumeController1= nullptr;
-    SonosVolumeController* _sonosVolumeController2 = nullptr;
+    std::shared_ptr<RotaryControl> _rotaryControl1 = nullptr;
+    std::shared_ptr<Button> _button1 = nullptr;
+    std::shared_ptr<RotaryControl> _rotaryControl2 = nullptr;
+    std::shared_ptr<Button> _button2 = nullptr;
+    std::shared_ptr<RotaryControl> _rotaryControl3 = nullptr;
+    std::shared_ptr<Button> _button3 = nullptr;
     std::string _filePathPrefix;
     std::shared_ptr<Card> _currentCard = nullptr;
     uint16_t _pulsingInterval = 909;
     volatile CardReaderState _cardReaderState = CardReaderState::Idle;
     std::vector<Command> _commandsForNextCard;
     std::string readParameterString(uint8_t* parameterValue, int size);
+    void setMainChannel(SonosChannel* channel);
+    void setSecondaryChannel(SonosChannel* channel);
     void handleCommands(const std::vector<Command>& commands, bool cardRemoved = false);
     void handleButtons();
     void handleLeds();
+    void handleRotaryControls();
     void continuePlay();
-    void togglePlay(bool onlyPlay = false);
     void notifyCommandProcessing();
+    void initializeRotaryControl(std::shared_ptr<RotaryControl>& rotaryControl, ESP32Encoder& encoder, uint8_t functionSelection, ChannelSelection channelSelection, uint8_t customSonChannel, uint8_t customDevice);
+    void initializeButton(std::shared_ptr<Button>& button, uint8_t buttonNumber, uint8_t pin, uint8_t functionSelection, ChannelSelection channelSelection, uint8_t customSonChannel, uint8_t customDevice);
 
     uint8_t _tempVolumeGroup = 255;
     uint8_t _originalValumeGroup = 255;
@@ -58,6 +68,7 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     void setTempVolumeGroup(uint8_t percentage, std::shared_ptr<SonosChannelPlayHandle>& playHandle);
     void resetFromTempVolumeGroup();
     void handleTempVolume();
+    SonosChannel* getChannel(ChannelSelection channelSelection, uint8_t customChannel);
   public:
     const std::string logPrefix() override;
     const std::string name() override;
@@ -73,7 +84,11 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     uint16_t getPulsingInterval() const;
     PlayerState playerState() const;
     CardReaderState cardReaderState() const;
-
+    void setVolumeRelative(ChannelSelection channelSelection, uint8_t customChannel, int8_t diff);
+    void setGroupVolumeRelative(ChannelSelection channelSelection, uint8_t customChannel, int8_t diff);
+    void togglePlay(ChannelSelection channelSelection, uint8_t customChannel, bool onlyPlay = false);
+    void nextTrack(ChannelSelection channelSelection, uint8_t customChannel);
+    void previousTrack(ChannelSelection channelSelection, uint8_t customChannel);
 };
 
 extern SonosNFCPlayerModule openknxSonosNFCPlayer;

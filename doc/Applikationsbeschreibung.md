@@ -273,13 +273,15 @@ Schritt 5:
 <!-- DOC -->
 ### Haupt-Sonoskanal
 
-Sonsos Kanal der vom Player benutzt wird
+Sonsos Kanal der vom Player benutzt wird.
+Achtung: Die Einstellung kann durch Gruppenobjekte und NFC-Tags überladen werden.
 
 <!-- DOC -->
 ### Zweit-Sonoskanal (0-deaktiviert)
 
 Zweiter Kanal der automatisch beim starten zum Hauptkanal gruppiert wird.
-0 bedeutet, dass kein weitere Kanal automatisch zum Hauptkanal gruppiert wird.
+0 (bzw. 64 bei Gruppenobjektsteuerung) bedeutet, dass kein weitere Kanal automatisch zum Hauptkanal gruppiert wird.
+Achtung: Die Einstellung kann durch Gruppenobjekte und NFC-Tags überladen werden.
 
 <!-- DOC -->
 ### Stoppt Wiedergabe beim Entfernen der Karte
@@ -296,3 +298,50 @@ Beispiel:
 - Benötigte Referenz: x-file-cifs://192.168.0.1/Share/Storage/Musik/Queen/A Kind of Magic/
 - Hinterlegt in 'Dateifreigabe Präfix': //192.168.0.1/Share/Storage/Musik
 - Referenz im NFC Tag: x-file-cifs:Queen/A Kind of Magic/
+
+<!-- DOC-->
+## Drehregler 1-3
+
+In diesem Abschnitt erfolgt die Festlegung der Standardfunktion der Drehregler.
+
+<!-- DOC -->
+### Drehen
+
+Funktion die beim Drehen ausgeführt wird
+
+- Lautstärke
+  Die Lautstärke des ausgwählten Lautsprechers ändern
+- Gruppenlautstärke
+  Die Gruppenlautstärke des ausgwählten Lautsprechers ändern
+- Geräte Prozent Steuern
+  Die Prozentsteuerung eines Gerätes bedienen
+
+<!-- DOC -->
+### Drücken
+
+Funktion die beim Drücken des Drehreglers ausgeführt wird.
+
+- Pause/Start
+- Vorheriger Titel
+- Nächster Titel
+- Gerät Ein-/Ausschalten
+
+<!-- DOC -->
+### Kanal
+
+- Sonso-Hauptkanal
+  Der in unter Sonos-Hauptkanal konfigurierte Lautsprecher
+- Sonos-Zweitkanal
+  Der in unter Sonos-Zweitkanal konfigurierte Lautsprecher
+- Lautsprechernummer
+  Eingegene Lautsprechnernummer
+
+<!-- DOC -->
+### Lautsprecher
+
+Die Lautsprechernummer 
+
+<!-- DOC -->
+### Gerät
+
+Die Gerätenummer

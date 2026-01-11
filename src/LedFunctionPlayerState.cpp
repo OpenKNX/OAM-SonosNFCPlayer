@@ -17,6 +17,8 @@ const char* LedFunctionPlayerState::getPlayerStateName(PlayerState state)
             return "PlayingTag";
         case PlayerState::CommandProcessing:
             return "CommandProcessing";
+        case PlayerState::SettingVolume:
+            return "SettingVolume";
         case PlayerState::CardReaderError:
             return "CardReaderError";
         default:
@@ -55,7 +57,10 @@ void LedFunctionPlayerState::loop()
             _ledFunctionGroup->color(OpenKNX::Led::Color::Green);
             _ledFunctionGroup->on();
             return;
-        
+        case PlayerState::SettingVolume:
+            _ledFunctionGroup->color(OpenKNX::Led::Color::Magenta);
+            _ledFunctionGroup->on();
+            return;
         case PlayerState::PlayingTag:
             _ledFunctionGroup->color(OpenKNX::Led::Color::Blue);
             _ledFunctionGroup->pulsing(pulsingInterval);

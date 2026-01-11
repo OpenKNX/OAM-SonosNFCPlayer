@@ -8,6 +8,7 @@ enum class PlayerState
     CardReaderTagReading,
     CardReaderTagAvailable,
     CommandProcessing,
+    SettingVolume,
     PlayingTag
 
 };

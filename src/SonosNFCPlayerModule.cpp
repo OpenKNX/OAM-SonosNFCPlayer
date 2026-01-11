@@ -1,8 +1,14 @@
+#include "OpenKNX.h"
 #include "SonosNFCPlayerModule.h"
 #include "SonosModule.h"
 #include "SonosChannel.h"
-#include "SonosVolumeController.h"
-#include "SonosGroupVolumeController.h"
+#include "RotaryControlVolume.h"
+#include "RotaryControlGroupVolume.h"
+#include "RotaryControlDevice.h"
+#include "ButtonPause.h"
+#include "ButtonNextTrack.h"
+#include "ButtonPreviousTrack.h"
+#include "ButtonDevice.h"
 #include <ESP32Encoder.h>
 #include "PlayerState.h"
 
@@ -33,94 +39,114 @@ void SonosNFCPlayerModule::setup(bool configured)
 {
     _cardReader = new CardReader();
     _cardReader->setup();
+ 
     if (configured)
     {
+        if (!KoPLY_MainChannelStatus.initialized())
+            KoPLY_MainChannelStatus.requestObjectRead();
+        if (!KoPLY_SecondaryChannelStatus.initialized())
+            KoPLY_SecondaryChannelStatus.requestObjectRead();
+ 
         _filePathPrefix = readParameterString(ParamPLY_FileSharePrefix, 50);
         _configuredMainChannel = openknxSonosModule.getChannel(ParamPLY_MainChannel - 1);
         if (_configuredMainChannel == nullptr)
             logErrorP("Main channel %d not active", ParamPLY_MainChannel);
-        _mainChannel = _configuredMainChannel;
+        setMainChannel(_configuredMainChannel);
         if (ParamPLY_SecondaryChannel > 0)
         {
             _configuredSecondaryChannel = openknxSonosModule.getChannel(ParamPLY_SecondaryChannel - 1);
             if (_configuredSecondaryChannel == nullptr)
                 logErrorP("Secondary channel %d not active", ParamPLY_SecondaryChannel);
-            _secondaryChannel = _configuredSecondaryChannel;
+            setSecondaryChannel(_configuredSecondaryChannel);
         }
         // init encoder and buttons
 
-        pinMode(ENCODER1_BUTTON, INPUT_PULLUP);
         ESP32Encoder::useInternalWeakPullResistors = puType::up;
         logDebugP("Attaching encoder 1");
         _encoder1.attachHalfQuad(ENCODER1_DT, ENCODER1_CLK);
       
-        pinMode(ENCODER2_BUTTON, INPUT_PULLUP);
+        initializeRotaryControl(_rotaryControl1, _encoder1, ParamPLY_RotaryController1, (ChannelSelection) ParamPLY_RotaryController1ChSelect, (uint8_t) ParamPLY_RotaryController1Son, (uint8_t) ParamPLY_RotaryController1Dev);
+        initializeButton(_button1, 1, ENCODER1_BUTTON, ParamPLY_Button1, (ChannelSelection) ParamPLY_Button1ChSelect, (uint8_t) ParamPLY_Button1Son, (uint8_t) ParamPLY_Button1Dev);
+       
         ESP32Encoder::useInternalWeakPullResistors = puType::up;
         logDebugP("Attaching encoder 2");
         _encoder2.attachHalfQuad(ENCODER2_DT, ENCODER2_CLK);
+
+        initializeRotaryControl(_rotaryControl2, _encoder2, ParamPLY_RotaryController2, (ChannelSelection) ParamPLY_RotaryController2ChSelect, (uint8_t) ParamPLY_RotaryController2Son, (uint8_t) ParamPLY_RotaryController2Dev);
+        initializeButton(_button2, 2, ENCODER2_BUTTON, ParamPLY_Button2, (ChannelSelection) ParamPLY_Button2ChSelect, (uint8_t) ParamPLY_Button2Son, (uint8_t) ParamPLY_Button2Dev);
+
       
-        pinMode(ENCODER3_BUTTON, INPUT_PULLUP);
         ESP32Encoder::useInternalWeakPullResistors = puType::up;
         logDebugP("Attaching encoder 3");
         _encoder3.attachHalfQuad(ENCODER3_DT, ENCODER3_CLK);
-      
-        // init sonos volume
-        if (_mainChannel != nullptr)
-        {
-            _sonosGroupVolumeController = new SonosGroupVolumeController(_encoder1, _mainChannel);
-            _sonosVolumeController1 = new SonosVolumeController(_encoder2, _mainChannel);
-        }
-        if (_secondaryChannel != nullptr)
-        {
-            _sonosVolumeController2 = new SonosVolumeController(_encoder3, _secondaryChannel);
-        }
+
+        initializeRotaryControl(_rotaryControl3, _encoder3, ParamPLY_RotaryController3, (ChannelSelection) ParamPLY_RotaryController3ChSelect, (uint8_t) ParamPLY_RotaryController3Son, (uint8_t) ParamPLY_RotaryController3Dev);
+        initializeButton(_button3, 3, ENCODER3_BUTTON, ParamPLY_Button3, (ChannelSelection) ParamPLY_Button3ChSelect, (uint8_t) ParamPLY_Button3Son, (uint8_t) ParamPLY_Button3Dev);
+    }
+}
+
+void SonosNFCPlayerModule::setMainChannel(SonosChannel* channel)
+{
+    _mainChannel = channel;
+    KoPLY_MainChannelStatus.value(channel->getChannelIndex(), DPT_Value_1_Ucount);
+}
+
+void SonosNFCPlayerModule::setSecondaryChannel(SonosChannel* channel)
+{
+    _secondaryChannel = channel;
+    KoPLY_SecondaryChannelStatus.value(channel == nullptr ? (uint8_t) 63 : channel->getChannelIndex(), DPT_Value_1_Ucount);
+}
+
+void SonosNFCPlayerModule::initializeRotaryControl(std::shared_ptr<RotaryControl>& rotaryControl, ESP32Encoder& encoder, uint8_t functionSelection, ChannelSelection channelSelection, uint8_t customSonChannel, uint8_t customDevice)
+{
+    switch (functionSelection)
+    {
+        case 0:
+            logDebugP("Initializing rotary control as volume control");
+            rotaryControl =  std::make_shared<RotaryControlVolume>(*this, encoder, channelSelection, customSonChannel);
+            break;
+        case 1:
+            logDebugP("Initializing rotary control as group volume control");
+            rotaryControl =  std::make_shared<RotaryControlGroupVolume>(*this, encoder, channelSelection, customSonChannel);
+            break;
+        case 2:
+            logDebugP("Initializing rotary control as device percentage control");
+            rotaryControl =  std::make_shared<RotaryControlDevice>(*this, encoder, customDevice);
+            break;
+    }
+}
+
+void SonosNFCPlayerModule::initializeButton(std::shared_ptr<Button>& button, uint8_t buttonNumber, uint8_t pin, uint8_t functionSelection, ChannelSelection channelSelection, uint8_t customSonChannel, uint8_t customDevice)
+{
+    switch (functionSelection)
+    {
+        case 0:
+            logDebugP("Initializing button %d as pause/play", buttonNumber);
+            button = std::make_shared<ButtonPause>(*this, pin, channelSelection, customSonChannel);
+            break;
+        case 1:
+            logDebugP("Initializing button %d as next track", buttonNumber);
+            button = std::make_shared<ButtonNextTrack>(*this, pin, channelSelection, customSonChannel);
+            break;
+        case 2:
+            logDebugP("Initializing button %d as previous track", buttonNumber);
+            button = std::make_shared<ButtonPreviousTrack>(*this, pin, channelSelection, customSonChannel);
+            break;
+        case 3:
+            logDebugP("Initializing button %d as device button", buttonNumber);
+            button = std::make_shared<ButtonDevice>(*this, pin, customDevice);
+            break;
     }
 }
 
 void SonosNFCPlayerModule::handleButtons()
 {
-    if (openknxSonosModule.isInitialized() == false)
-        return;
-    bool input = !digitalRead(ENCODER1_BUTTON);
-    if (_lastButtonState1 != input)
-    {
-        _lastButtonState1 = input;
-        logDebugP("Pressed 1 %d", input);
-        if (input)
-        {
-            togglePlay();
-        }
-    }
-
-    input = !digitalRead(ENCODER2_BUTTON);
-    if (_lastButtonState2 != input)
-    {
-        _lastButtonState2 = input;
-        logDebugP("Pressed 2 %d", input);
-        Serial.println(input);
-        if (input)
-        {
-            //   ledStrip.forceOn(true);
-            //   ledStrip.loop();
-            _mainChannel->previousTrack();
-            // ledStrip.forceOn(false);
-        }
-    }
-
-    input = !digitalRead(ENCODER3_BUTTON);
-    if (_lastButtonState3 != input)
-    {
-        _lastButtonState3 = input;
-        logDebugP("Pressed 3 %d", input);
-        if (input)
-        {
-            //   ledStrip.forceOn(true);
-            //   ledStrip.loop();
-            if (_mainChannel != nullptr)
-                _mainChannel->nextTrack();
-            // ledStrip.forceOn(false);
-        }
-    }
+    if (_button1 != nullptr)
+        _button1->loop();
+    if (_button2 != nullptr)
+        _button2->loop();
+    if (_button3 != nullptr)
+        _button3->loop();
 }
 
 std::string SonosNFCPlayerModule::readParameterString(uint8_t *parameterValue, int size)
@@ -136,18 +162,13 @@ void SonosNFCPlayerModule::loop(bool configured)
         _lastCommandProcessTime = 0;
     }
     handleLeds();
+    handleRotaryControls();
     handleButtons();
     handleTempVolume();
     if (_cardReader == nullptr)
         return;
     if (openknxSonosModule.isInitialized() == false)
         return;
-    if (_sonosGroupVolumeController != nullptr)
-        _sonosGroupVolumeController->loop();
-    if (_sonosVolumeController1 != nullptr)
-        _sonosVolumeController1->loop();
-    if (_sonosVolumeController2 != nullptr)
-        _sonosVolumeController2->loop();
 
     auto cardReaderState = _cardReader->state();
     if (cardReaderState != _cardReaderState)
@@ -337,7 +358,7 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                 {
                     if (command.parameter.empty())
                     {
-                        _mainChannel = _configuredMainChannel;
+                        setMainChannel(_configuredMainChannel);
                         logDebugP("Setting main speaker to configured channel");
                          if (!hasPlayCommand) notifyCommandProcessing();
                     }
@@ -346,7 +367,7 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                         auto channel = openknxSonosModule.getChannel(channelNumber - 1);
                         if (channel != nullptr)
                         {
-                            _mainChannel = channel;
+                            setMainChannel(channel);
                             logDebugP("Setting main speaker to %d", channelNumber);
                             if (!hasPlayCommand) notifyCommandProcessing();
                         }
@@ -359,7 +380,7 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                 {
                     if (command.parameter.empty())
                     {
-                        _secondaryChannel = _configuredSecondaryChannel;
+                        setSecondaryChannel(_configuredSecondaryChannel);
                         logDebugP("Setting secondary speaker to configured channel");
                         if (!hasPlayCommand) notifyCommandProcessing();
                     }
@@ -367,7 +388,7 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                     {
                         if (channelNumber == 0)
                         {
-                            _secondaryChannel = nullptr;
+                            setSecondaryChannel(nullptr);
                             logDebugP("Disabling secondary speaker");
                             if (!hasPlayCommand) notifyCommandProcessing();
                         }
@@ -376,7 +397,7 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                             auto channel = openknxSonosModule.getChannel(channelNumber - 1);
                             if (channel != nullptr)
                             {
-                                _secondaryChannel = channel;
+                                setSecondaryChannel(channel);
                                 logDebugP("Setting secondary speaker to %d", channelNumber);
                                 if (!hasPlayCommand) notifyCommandProcessing();
                             }
@@ -529,32 +550,18 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
     }
 }
 
+void SonosNFCPlayerModule::handleRotaryControls()
+{
+    if (_rotaryControl1 != nullptr)
+        _rotaryControl1->loop();
+    if (_rotaryControl2 != nullptr)
+        _rotaryControl2->loop();
+    if (_rotaryControl3 != nullptr)
+        _rotaryControl3->loop();
+}
 void SonosNFCPlayerModule::continuePlay()
 {
-    togglePlay(true);
-}
-
-void SonosNFCPlayerModule::togglePlay(bool onlyPlay)
-{
-    if (_mainChannel != nullptr)
-    {
-        switch (_mainChannel->getPlayState())
-        {
-        case SonosApiPlayState::Paused_Playback:
-            _mainChannel->play();
-            break;
-        case SonosApiPlayState::Stopped:
-            _mainChannel->start(_currentPlayHandle);
-            break;
-        case SonosApiPlayState::Transitioning:
-        case SonosApiPlayState::Playing:
-            if (!onlyPlay)
-                _mainChannel->pause();
-            break;
-        default:
-            break;
-        }
-    }
+    togglePlay(ChannelSelection::Main, 0, true);
 }
 
 void SonosNFCPlayerModule::notifyCommandProcessing()
@@ -627,6 +634,42 @@ void SonosNFCPlayerModule::handleTempVolume()
 void SonosNFCPlayerModule::processInputKo(GroupObject &ko)
 {
     logDebugP("Input KO %d changed", (int)ko.asap());
+    if (_rotaryControl1 != nullptr)
+        _rotaryControl1->processInputKo(ko);
+    if (_rotaryControl2 != nullptr)
+        _rotaryControl2->processInputKo(ko);
+    if (_rotaryControl3 != nullptr)
+        _rotaryControl3->processInputKo(ko);
+    
+    switch (ko.asap())
+    {
+        case PLY_KoMainChannel:
+        {
+            uint8_t value = ko.value(DPT_Value_1_Ucount);
+            auto channel = openknxSonosModule.getChannel(value);
+            if (channel != nullptr)
+            {
+                setMainChannel(channel);
+            }
+        }
+        break;
+        case PLY_KoSecondaryChannel:
+        {
+            uint8_t value = ko.value(DPT_Value_1_Ucount);
+            if (value == 63)
+            {
+                setSecondaryChannel(nullptr);
+            }
+            else
+            {
+                auto channel = openknxSonosModule.getChannel(value);
+                if (channel != nullptr)
+                {
+                    setSecondaryChannel(channel);
+                }
+            }
+        }
+    }
 }
 
 bool SonosNFCPlayerModule::processCommand(const std::string cmd, bool debugKo)
@@ -688,6 +731,10 @@ PlayerState SonosNFCPlayerModule::playerState() const
     {
         return PlayerState::CardReaderTagReading;
     }
+    if (_settingVolumeInProgress)
+    {
+        return PlayerState::SettingVolume;
+    }
     switch (_cardReaderState)
     {
     case CardReaderState::Error:
@@ -717,4 +764,88 @@ PlayerState SonosNFCPlayerModule::playerState() const
 uint16_t SonosNFCPlayerModule::getPulsingInterval() const
 {
     return _pulsingInterval;
+}
+
+void SonosNFCPlayerModule::setVolumeRelative(ChannelSelection channelSelection, uint8_t customChannel, int8_t diff)
+{
+    auto channel = getChannel(channelSelection, customChannel);
+    if (channel != nullptr)
+    {
+        _settingVolumeInProgress = true;
+        handleLeds();
+        _mainChannel->setVolumeRelative(diff);
+        _settingVolumeInProgress = false;
+    }
+}
+
+void SonosNFCPlayerModule::setGroupVolumeRelative(ChannelSelection channelSelection, uint8_t customChannel, int8_t diff)
+{
+    auto channel = getChannel(channelSelection, customChannel);
+    if (channel != nullptr)
+    {
+        _settingVolumeInProgress = true;
+        handleLeds();
+        channel->setGroupVolumeRelative(diff);
+        _settingVolumeInProgress = false;
+    }
+}
+
+void SonosNFCPlayerModule::togglePlay(ChannelSelection channelSelection, uint8_t customChannel, bool onlyPlay)
+{
+    auto channel = getChannel(channelSelection, customChannel);
+    if (channel != nullptr)
+    {
+        switch (channel->getPlayState())
+        {
+        case SonosApiPlayState::Paused_Playback:
+            channel->play();
+            break;
+        case SonosApiPlayState::Stopped:
+            if (channel == _mainChannel || channel == _secondaryChannel)
+                channel->start(_currentPlayHandle);
+            break;
+        case SonosApiPlayState::Transitioning:
+        case SonosApiPlayState::Playing:
+            if (!onlyPlay)
+                channel->pause();
+            break;
+        default:
+            break;
+        }
+    }
+}
+
+SonosChannel* SonosNFCPlayerModule::getChannel(ChannelSelection channel, uint8_t customChannel)
+{
+    switch (channel)
+    {
+    case ChannelSelection::Main:
+        return _mainChannel;
+    case ChannelSelection::Secondary:
+        return _secondaryChannel;
+    case ChannelSelection::Custom:
+        if (customChannel == 0)
+            return nullptr;
+        return openknxSonosModule.getChannel(customChannel - 1);
+    default:
+        return nullptr;
+    }
+}
+
+void SonosNFCPlayerModule::nextTrack(ChannelSelection channelSelection, uint8_t customChannel)
+{
+    auto channel = getChannel(channelSelection, customChannel);
+    if (channel != nullptr)
+    {
+        channel->nextTrack();
+    }
+}
+
+void SonosNFCPlayerModule::previousTrack(ChannelSelection channelSelection, uint8_t customChannel)
+{
+    auto channel = getChannel(channelSelection, customChannel);
+    if (channel != nullptr)
+    {
+        channel->previousTrack();
+    }
 }
