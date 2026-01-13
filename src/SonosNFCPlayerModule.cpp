@@ -406,6 +406,10 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                         }
                     }
                 }
+                else if (name == "progmode")
+                {
+                    knx.progMode(command.getParameterAsBool(true));
+                }
                 else if (_mainChannel != nullptr)
                 {
                     if (name == "shuffle")

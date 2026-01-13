@@ -10,5 +10,4 @@ enum class PlayerState
     CommandProcessing,
     SettingVolume,
     PlayingTag
-
 };

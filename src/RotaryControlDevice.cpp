@@ -16,7 +16,7 @@ void RotaryControlDevice::loop()
     {
         _takeOverLock = 0;
         _lastPercentage = KoDEV_CHPercentageFeedback.value(DPT_Scaling);
-        _encoder.setCount(_lastPercentage);
+        _encoder.setCount(-(int64_t)_lastPercentage);
     }
     if (_debounceTime != 0)
     {
@@ -40,6 +40,7 @@ void RotaryControlDevice::loop()
     if (percentage != _lastPercentage)
     {
         KoDEV_CHPercentage.valueCompare(percentage, DPT_Scaling);
+        KoDEV_CHPercentageFeedback.valueNoSend(percentage, DPT_Scaling);
         _lastPercentage = percentage;
         _takeOverLock = max(1UL, millis());
         _debounceTime = _takeOverLock;

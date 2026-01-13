@@ -182,7 +182,7 @@ Beim entfernen des Tags, wird wieder die originale Lautstärke hergestellt.
 Beispiel:
 - TempVolumeGroup:50
 
-#### Volumne&lt;Lautsprechernummer&gt;
+#### Volumne
 Volumne&lt;Lautsprechernummer&gt;:&lt;0-100&gt;
 
 Legt die Lautstärke für den angegebenen Sonoskanal fest
@@ -190,7 +190,7 @@ Legt die Lautstärke für den angegebenen Sonoskanal fest
 Beispiel:
 - Volumne4:50
 
-#### VolumneGroup&lt;Lautsprechernummer&gt;
+#### VolumneGroup
 VolumneGroup&lt;Lautsprechernummer&gt;:&lt;0-100&gt;
 
 Legt die Lautstärke für der am angegebenen Sonoskanal gespielten Gruppe fest
@@ -198,7 +198,7 @@ Legt die Lautstärke für der am angegebenen Sonoskanal gespielten Gruppe fest
 Beispiel:
 - VolumneGroup4:50
 
-#### MainSpeaker:&lt;Sonsoskanal&gt;
+#### MainSpeaker
 MainSpeaker:[&lt;Sonsoskanal&gt;]
 
 Legt den Haut-Sonoskanal fest.
@@ -210,7 +210,7 @@ Beispiele:
 - MainSpeaker
   Es wird der in der ETS konfigurierte Haupt-Sonoskanal verwendet  
 
-#### SecondarySpeaker:&lt;Sonsoskanal&gt;
+#### SecondarySpeaker
 SecondarySpeaker:[&lt;Sonsoskanal&gt;]
 
 Legt den Zweit-Sonoskanal fest.
@@ -224,7 +224,7 @@ Beispiele:
 - SecondarySpeaker
   Es wird der in der ETS konfigurierte Zweit-Sonoskanal verwendet  
 
-#### Join:&lt;Sonsoskanal&gt;
+#### Join
 Join:&lt;Sonsoskanal&gt;
 
 Verbindet den angegeben Sonoskanal mit dem in der ETS unter 'Haupt-Sonoskanal' konfigurierte Kanal 
@@ -233,7 +233,7 @@ Beispiele:
 - Join:5
   Der Sonsoskanal 5 wird mit dem in der ETS unter 'Haupt-Sonoskanal' konfigurierte Kanal verbunden.
 
-#### Unjoin:&lt;Sonsoskanal&gt;
+#### Unjoin
 Unjoin:&lt;Sonsoskanal&gt;
 
 Entfernt den angegeben Sonoskanal von dem in der ETS unter 'Haupt-Sonoskanal' konfigurierte Kanal 
@@ -241,6 +241,14 @@ Entfernt den angegeben Sonoskanal von dem in der ETS unter 'Haupt-Sonoskanal' ko
 Beispiele:
 - Unjoin:5
   Der Sonsoskanal 5 wird von der in der ETS unter 'Haupt-Sonoskanal' konfigurierte Kanal entfernt.
+
+#### ProgMode
+ProgMode:&lt;;on/off&gt;
+
+Aktiviert oder deaktiviert den KNX Programmiermodus um die KNX-Adresse zu programmieren.
+
+Bespiel:
+ProgMode:on
 
 <!-- DOCEND -->
 ### Programmierung über die NFC Tools App

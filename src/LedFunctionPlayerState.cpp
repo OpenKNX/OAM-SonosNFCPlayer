@@ -34,12 +34,20 @@ void LedFunctionPlayerState::loop()
     }
     auto playerState = openknxSonosNFCPlayer.playerState();
     auto pulsingInterval = openknxSonosNFCPlayer.getPulsingInterval();
-    if (playerState == _lastPlayerState && pulsingInterval == _lastPulsingInterval)
+    auto progMode = knx.progMode();
+    if (playerState == _lastPlayerState && pulsingInterval == _lastPulsingInterval && _lastProgMode == progMode)
         return;
     logDebug("StateLED", "Player state changed from %s to %s", getPlayerStateName(_lastPlayerState), getPlayerStateName(playerState));
     _lastPlayerState = playerState;
     _lastPulsingInterval = pulsingInterval;
+    _lastProgMode = progMode;
   
+    if (progMode)
+    {
+        _ledFunctionGroup->color(OpenKNX::Led::Color::Red);
+        _ledFunctionGroup->on();
+        return;
+    }
     switch (playerState)
     {
         case PlayerState::CardReaderInitializing:
@@ -70,7 +78,7 @@ void LedFunctionPlayerState::loop()
             _ledFunctionGroup->flash(100);
             return;
         default:
-            _ledFunctionGroup->color(OpenKNX::Led::Color::Green);
+            logError("StateLED", "Unknown player state: %d", (int)playerState);
             return;
     }
 }
