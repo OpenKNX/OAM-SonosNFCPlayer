@@ -40,14 +40,13 @@ void LedFunctionPlayerState::loop()
     logDebug("StateLED", "Player state changed from %s to %s", getPlayerStateName(_lastPlayerState), getPlayerStateName(playerState));
     _lastPlayerState = playerState;
     _lastPulsingInterval = pulsingInterval;
-    _lastProgMode = progMode;
-  
-    if (progMode)
+    if (_lastProgMode != progMode)
     {
-        _ledFunctionGroup->color(OpenKNX::Led::Color::Red);
-        _ledFunctionGroup->on();
-        return;
-    }
+        _lastProgMode = progMode;
+        _ledFunctionGroup->forceOn(progMode);
+        if (progMode)
+            return;
+    }  
     switch (playerState)
     {
         case PlayerState::CardReaderInitializing:
