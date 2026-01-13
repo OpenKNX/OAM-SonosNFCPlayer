@@ -777,7 +777,7 @@ void SonosNFCPlayerModule::setVolumeRelative(ChannelSelection channelSelection, 
     {
         _settingVolumeInProgress = true;
         handleLeds();
-        _mainChannel->setVolumeRelative(diff);
+        channel->setVolumeRelative(diff);
         _settingVolumeInProgress = false;
     }
 }
