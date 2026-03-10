@@ -165,8 +165,8 @@ void CardReader::nfcTask()
     _state = CardReaderState::Idle;
     const unsigned long pollInterval = 50; // ms
     bool tagPresent = false;
-    uint8_t *lastUid[7] = {0};
-    uint8_t lastUidLength = 0;
+    std::string lastUid = "";
+
     int tagReadFailedCount = 0;
     for (;;)
     {
@@ -182,12 +182,13 @@ void CardReader::nfcTask()
         // Tag detected
         if (detected)
         {
+            std::string newUid = Card::createUidString(uid, uidLength);
             if (tagReadFailedCount > 0)
             {
                 logWarningP("Tag read succeeded after %d failed attempts", tagReadFailedCount);
                 tagReadFailedCount = 0;
             }
-            if (lastUidLength == uidLength && memcmp(lastUid, uid, uidLength) == 0)
+            if (lastUid == newUid)
             {
                 // same tag as before
             }
@@ -195,26 +196,44 @@ void CardReader::nfcTask()
             {
                 tagPresent = true;     
                 _state = CardReaderState::TagReading;
-                NfcTag tag = _nfcAdapter.read();
-                std::string result = handleTag(tag);
-
-                NfcTag tag2 = _nfcAdapter.read();
-                std::string result2 = handleTag(tag2);
-
-                if (result != result2)
+                std::shared_ptr<Card> newCard = nullptr;
+                for (auto& card : _cardCash)
                 {
-                    logWarningP("Inconsistent tag reads detected");
-                    vTaskDelay(pdMS_TO_TICKS(pollInterval));
-                    continue; // try again
+                    if (card->getUid() == newUid)
+                    {
+                        newCard = card;
+                        // move to end of cache
+                        _cardCash.erase(std::remove(_cardCash.begin(), _cardCash.end(), card), _cardCash.end()); 
+                        break;
+                    }
                 }
-                else
+                if (newCard == nullptr)
                 {
-                    lastUidLength = uidLength;
-                    memset(lastUid, 0, sizeof(lastUid));
-                    memcpy(lastUid, uid, uidLength);
-                    _currentCard = std::make_shared<Card>(uid, uidLength, result.c_str(), result.length());
-                    _state = CardReaderState::TagAvailable;
+                    NfcTag tag = _nfcAdapter.read();
+                    std::string result = handleTag(tag);
+
+                    NfcTag tag2 = _nfcAdapter.read();
+                    std::string result2 = handleTag(tag2);
+
+                    if (result != result2)
+                    {
+                        logWarningP("Inconsistent tag reads detected");
+                        vTaskDelay(pdMS_TO_TICKS(pollInterval));
+                        continue; // try again
+                    }
+                    newCard = std::make_shared<Card>(newUid, result.c_str(), result.length());
+                    _cardCash.push_back(newCard);
+                    if (_cardCash.size() > 10)
+                    {
+                        // Limit cache size to 10 cards, remove oldest entries
+                        _cardCash.erase(_cardCash.begin(), _cardCash.begin() + _cardCash.size() - 10);
+                    }
                 }
+                _currentCard = newCard;
+                lastUid = newUid;
+            
+                _state = CardReaderState::TagAvailable;
+            
             }
         }
         else if (tagPresent)
@@ -226,7 +245,7 @@ void CardReader::nfcTask()
                 // reset last tag info after several failed reads
                 tagPresent = false;
                 tagReadFailedCount = 0;
-                lastUidLength = 0;
+                lastUid = "";
                 _state = CardReaderState::Idle;
                 _currentCard = nullptr;
             }
@@ -291,4 +310,9 @@ std::string CardReader::handleTag(NfcTag &tag)
         }
     }
     return result;
+}
+
+void CardReader::clearCardCache()
+{
+    _cardCash.clear();
 }

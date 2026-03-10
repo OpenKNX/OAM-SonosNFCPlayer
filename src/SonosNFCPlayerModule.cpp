@@ -11,6 +11,7 @@
 #include "ButtonDevice.h"
 #include <ESP32Encoder.h>
 #include "PlayerState.h"
+#include "NetworkModule.h"
 
 SonosNFCPlayerModule openknxSonosNFCPlayer;
 
@@ -279,6 +280,10 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
     std::string uri = "";
     std::string title = "";
     std::string image = "";
+    std::string wifi = "";
+    std::string password = "";
+    std::string mc = "";
+
     uint8_t tempPercentage = 255;
           
     bool pause = false;
@@ -406,10 +411,6 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
                         }
                     }
                 }
-                else if (name == "progmode")
-                {
-                    knx.progMode(command.getParameterAsBool(true));
-                }
                 else if (_mainChannel != nullptr)
                 {
                     if (name == "shuffle")
@@ -530,6 +531,26 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
         {
             continuePlaying = command.getParameterAsBool(true);
         }
+        else if (name == "progmode")
+        {
+            knx.progMode(command.getParameterAsBool(true));
+        }
+        else if (name == "wifi")
+        {
+            wifi = command.parameter;
+        }
+        else if (name == "password")
+        {
+            password = command.parameter;
+        }
+        else if (name == "mc")
+        {
+            mc = command.parameter;
+        }   
+        else if (name == "clearcache")
+        {
+            _cardReader->clearCardCache();
+        }
     }
     if (!uri.empty())
     {
@@ -551,6 +572,25 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
     else if (continuePlaying && _playAllowed)
     {
         continuePlay();
+    }
+    bool needRestart = false;
+    if (!wifi.empty())
+    {
+        openknxNetwork.saveWifiSettings(wifi.c_str(), password.c_str(), false);
+        needRestart = true;
+    }
+    if (!mc.empty())
+    {
+        IPAddress new_address;
+        std::string new_address_str = mc;
+        if (new_address_str == "") new_address_str = "0.0.0.0";
+        new_address.fromString(new_address_str.c_str());
+        openknxNetwork.setMulticastAddress(new_address, false);
+        needRestart = true;
+    }
+    if (needRestart)
+    {
+        openknx.restart();
     }
 }
 

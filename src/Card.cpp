@@ -2,15 +2,10 @@
 #include "OpenKNX.h"
 #include <sstream>
 
-Card::Card(const uint8_t *uid, unsigned int uidLength, const char *content, unsigned int length)
+Card::Card(const std::string& uid, const char *content, unsigned int length)
 {
     logDebug("Card", "Card constructor called");
-    for (int i = 0; i < uidLength; i++)
-    {
-        char buf[4];
-        sprintf(buf, "%02X", (uint8_t)uid[i]);
-        _uidStr += buf;
-    }
+    _uidStr = uid;
     std::string contentStr(content, length);
     if (contentStr.rfind("x-file-cifs://192.168.0.1/Share/Storage/Musik/") == 0)
     {
@@ -19,6 +14,18 @@ Card::Card(const uint8_t *uid, unsigned int uidLength, const char *content, unsi
         logDebug("Card", "Converted old card content to new format: %s", contentStr.c_str());
     }
     _commands = CommandParser::parse(contentStr);
+}
+
+std::string Card::createUidString(const uint8_t *uid, unsigned int uidLength)
+{
+    std::string uidStr;
+    for (int i = 0; i < uidLength; i++)
+    {
+        char buf[4];
+        sprintf(buf, "%02X", (uint8_t)uid[i]);
+        uidStr += buf;
+    }
+    return uidStr;
 }
 
 const std::vector<Command> &Card::getCommands() const

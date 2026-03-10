@@ -2,11 +2,14 @@
 <?xml-model href="../../Organization/knxprod-support/knx_project_20/knx-editor.xsd" type="application/xml" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <KNX xmlns="http://knx.org/xml/project/20" xmlns:op="http://github.com/OpenKNX/OpenKNXproducer">
   <op:config href="SonosNFCPlayer.conf.xml" />
+  <op:nowarn id="1" regex="ReleaseApplicationVersion" />
+  <op:nowarn id="1" regex="ReleaseReplacesVersions" />
+
   <op:ETS
     OpenKnxId="0xAE"
     ApplicationNumber="0x2F"
-    ApplicationVersion="0.5.0"
-    ReplacesVersions="0.4 0.3 0.2 0.1"
+    ApplicationVersion="0.6.0"
+    ReplacesVersions="0.5 0.4 0.3 0.2 0.1"
     ApplicationRevision="0"
     ProductName="Sonos NFC Player"
     BusCurrent="30"
@@ -61,7 +64,7 @@
   <op:define prefix="LOG" ModuleType="10"
     share="../lib/OFM-LogicModule/src/Logikmodul.share.xml"
     template="../lib/OFM-LogicModule/src/Logikmodul.templ.xml"
-    NumChannels="20" 
+    NumChannels="50" 
     KoOffset="100">
     <op:verify File="../lib/OFM-LogicModule/library.json" ModuleVersion="%LOG_VerifyVersion%" /> 
   </op:define>

@@ -67,8 +67,13 @@ Befehl\[:Parameter\]\[;Befehl\[:Parameter\]\]...
 Uri:x-rincon-mp3radio://&lt;Streaming URL&gt;
 Titel:"Radio Wien; das Beste Radio"
 
-### Befehle
+#### Cache
 
+Um den NFC-Tag nicht immer vollständig zu lesen, wird intern ein Zwischenspeicher (Cache) verwendet, der den Inhalt der 10 zuletzt verwendeten NFC-Tag basierend auf der ID speichert.
+Es empfielt sich daher eine NFC-Tag mit dem 'ClearCache' Befehl zu erstellen, um den Cache für neu programmierte NFC-Tag zuvor löschen zu können.
+Alternativ kann das Gerät vom Netzteil getrennt werden, um den Zwischenspeicher zu löschen.
+
+### Befehle
 
 Befehle können beim Auflegen, beim Entfernen oder beim auflegen der nächsten Karte ausgeführt werden.
 Um einen Befehl beim Entfernen der Karte auszuführen, wird der Befehl mit einem '>' Prefix versehen.
@@ -249,6 +254,22 @@ Aktiviert oder deaktiviert den KNX Programmiermodus um die KNX-Adresse zu progra
 
 Bespiel:
 ProgMode:on
+
+#### WiFi
+Wifi:&lt;Wifi SSID&gt;
+Password:&lt;Wifi Passwort&gt;
+
+Set die WiFi für die Verbindung zum WLAN
+
+#### MC
+MC:&lt;KNX IP Multicast Address&gt;
+
+Set die für KNX IP verwendete Multicast Adresse.
+
+#### ClearCache
+
+Löscht den internen Zwischenspeicher für NFC-Tags. 
+Achtung, wird ein bereits programmierter NFC-Tag mit diesem Befehl programmiert, muss das Gerät vom Stromnetz getrennt werden, um nicht den alten Karteninhalt aus dem Cache zu bekommen.
 
 <!-- DOCEND -->
 ### Programmierung über die NFC Tools App

@@ -15,6 +15,7 @@ enum class CardReaderState
 
 class CardReader
 {
+    std::vector<std::shared_ptr<Card>> _cardCash = std::vector<std::shared_ptr<Card>>();
     CardReaderState _state = CardReaderState::Initializing;
     uint32_t _versionData = 0;
     PN532 _pn532;
@@ -32,5 +33,6 @@ public:
 
     std::shared_ptr<Card> currentCard();
     CardReaderState state();
+    void clearCardCache();
     
 };
