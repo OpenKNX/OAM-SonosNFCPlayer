@@ -230,15 +230,13 @@ void CardReader::nfcTask()
                     }
                 }
                 _currentCard = newCard;
-                lastUid = newUid;
-            
+                lastUid = newUid;           
                 _state = CardReaderState::TagAvailable;
             
             }
         }
         else if (tagPresent)
         {
-
             tagReadFailedCount++;
             if (tagReadFailedCount >= 6)
             {

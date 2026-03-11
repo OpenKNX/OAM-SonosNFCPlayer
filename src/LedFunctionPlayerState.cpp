@@ -43,7 +43,8 @@ void LedFunctionPlayerState::loop()
     if (_lastProgMode != progMode)
     {
         _lastProgMode = progMode;
-        _ledFunctionGroup->forceOn(progMode);
+        _ledFunctionGroup->color(OpenKNX::Led::Color::Red);
+        _ledFunctionGroup->on(progMode);
         if (progMode)
             return;
     }  
