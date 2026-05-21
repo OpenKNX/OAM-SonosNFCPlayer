@@ -27,9 +27,10 @@ class SonosNFCPlayerModule : public OpenKNX::Module
     LedFunctionPlayerState _ledFunctionPlayerState;
     LedFunctionTag _ledFunctionTag;
 
-    bool _playAllowed = false;
+    bool _startupFinishedPlayAllowed = false;
     
     unsigned  long _lastCommandProcessTime = 0;
+    unsigned  long _playingNotPossibleSince = 0;
     bool _handlingCardInProgress = false;
     bool _settingVolumeInProgress = false;
     CardReader* _cardReader;

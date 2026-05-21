@@ -79,9 +79,9 @@
                 <!-- ^^^need 4 bits ^^^-->
 
                 <!-- Rotary Control 1 Sonos -->
-                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%01003" Name="RotaryController1Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <Parameter Offset="1" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%01003" Name="RotaryController1Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
                 <!-- Rotary Control 1 Device -->
-                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%01004" Name="RotaryController1Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+                <Parameter Offset="1" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%01004" Name="RotaryController1Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
 
 
                 <!-- Button 1 -->
@@ -92,9 +92,9 @@
                 <!-- ^^^need 4 bits ^^^-->
 
                 <!-- Button 1 Sonos -->
-                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%01007" Name="Button1Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <Parameter Offset="3" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%01007" Name="Button1Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
                 <!-- Button 1 Device -->
-                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%01008" Name="Button1Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+                <Parameter Offset="3" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%01008" Name="Button1Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
 
               </Union>
 
@@ -110,9 +110,9 @@
                 <!-- ^^^need 4 bits ^^^-->
 
                 <!-- Rotary Control 2 Sonos -->
-                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%02003" Name="RotaryController2Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <Parameter Offset="1" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%02003" Name="RotaryController2Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
                 <!-- Rotary Control 2 Device -->
-                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%02004" Name="RotaryController2Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+                <Parameter Offset="1" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%02004" Name="RotaryController2Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
 
 
                 <!-- Button 2 -->
@@ -123,9 +123,9 @@
                 <!-- ^^^need 4 bits ^^^-->
 
                 <!-- Button 2 Sonos -->
-                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%02007" Name="Button2Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <Parameter Offset="3" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%02007" Name="Button2Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
                 <!-- Button 2 Device -->
-                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%02008" Name="Button2Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+                <Parameter Offset="3" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%02008" Name="Button2Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
 
               </Union>
 
@@ -140,9 +140,9 @@
                 <!-- ^^^need 4 bits ^^^-->
 
                 <!-- Rotary Control 3 Sonos -->
-                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%03003" Name="RotaryController3Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <Parameter Offset="1" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%03003" Name="RotaryController3Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
                 <!-- Rotary Control 3 Device -->
-                <Parameter Offset="1" BitOffset="0" Id="%AID%_UP-%TT%03004" Name="RotaryController3Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+                <Parameter Offset="1" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%03004" Name="RotaryController3Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
 
 
                 <!-- Button 3 -->
@@ -153,9 +153,9 @@
                 <!-- ^^^need 4 bits ^^^-->
 
                 <!-- Button 3 Sonos -->
-                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%03007" Name="Button3Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
+                <Parameter Offset="3" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%03007" Name="Button3Son" ParameterType="%AID%_PT-SONNumChannelsWithout0" Text="Lautsprecher" Value="1" />
                 <!-- Button 3 Device -->
-                <Parameter Offset="3" BitOffset="0" Id="%AID%_UP-%TT%03008" Name="Button3Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
+                <Parameter Offset="3" BitOffset="0" op:nowarn="true" Id="%AID%_UP-%TT%03008" Name="Button3Dev" ParameterType="%AID%_PT-DEVNumChannelsWithout0" Text="Gerät" Value="1" />
 
 
               </Union>

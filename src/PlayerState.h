@@ -2,6 +2,7 @@
 
 enum class PlayerState
 {
+    Startup,
     Idle,
     CardReaderInitializing,
     CardReaderError,
@@ -9,5 +10,6 @@ enum class PlayerState
     CardReaderTagAvailable,
     CommandProcessing,
     SettingVolume,
-    PlayingTag
+    PlayingTag,
+    PlayingNotPossible
 };

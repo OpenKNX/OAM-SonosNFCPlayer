@@ -5,6 +5,8 @@ const char* LedFunctionPlayerState::getPlayerStateName(PlayerState state)
 {
     switch (state)
     {
+        case PlayerState::Startup:
+            return "Startup";
         case PlayerState::CardReaderInitializing:
             return "CardReaderInitializing";
         case PlayerState::Idle:
@@ -21,6 +23,8 @@ const char* LedFunctionPlayerState::getPlayerStateName(PlayerState state)
             return "SettingVolume";
         case PlayerState::CardReaderError:
             return "CardReaderError";
+        case PlayerState::PlayingNotPossible:
+            return "PlayingNotPossible";
         default:
             return "Unknown";
     }
@@ -50,6 +54,7 @@ void LedFunctionPlayerState::loop()
     }  
     switch (playerState)
     {
+        case PlayerState::Startup:
         case PlayerState::CardReaderInitializing:
             _ledFunctionGroup->off();
             return;
@@ -60,6 +65,10 @@ void LedFunctionPlayerState::loop()
         case PlayerState::CardReaderError:
             _ledFunctionGroup->color(OpenKNX::Led::Color::Red);
             _ledFunctionGroup->blinking(250);
+            return;
+         case PlayerState::PlayingNotPossible:
+            _ledFunctionGroup->color(OpenKNX::Led::Color::Orange);
+            _ledFunctionGroup->blinking(500);
             return;
         case PlayerState::CardReaderTagReading:
             _ledFunctionGroup->color(OpenKNX::Led::Color::Green);

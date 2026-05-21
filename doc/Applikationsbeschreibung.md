@@ -64,7 +64,7 @@ Befehl\[:Parameter\]\[;Befehl\[:Parameter\]\]...
 
 #### Beispiel
 
-Uri:x-rincon-mp3radio://&lt;Streaming URL&gt;
+Uri:"x-rincon-mp3radio://&lt;Streaming URL&gt";
 Titel:"Radio Wien; das Beste Radio"
 
 #### Cache
@@ -89,7 +89,7 @@ Beispiele:
 ##### Radio
 URI:"x-rincon-mp3radio://&lt;Streaming URL&gt;"
 
-Beispiel: x-rincon-mp3radio://https://orf-live.ors-shoutcast.at/wie-q2a
+Beispiel: URI:"x-rincon-mp3radio://https://orf-live.ors-shoutcast.at/wie-q2a"
 
 
 Bei Verwendung von Radio Stream kann zusätzlich ein Title und eine Bild-URL angegeben werden.
@@ -116,7 +116,7 @@ Als Pfadseparatoren müssen '/' verwendet werden (nicht '\').
 Soll ein Ordner gespielt werden, muss der Pfad mit '/' enden. 
 Es können nur Ordner abgespielt werden, die zuvor in der Sonos App über die Synchronisation zur Mediathek hinzugefügt wurden.
 
-Beispiel: x-file-cifs:"Pink Floyd/The Wall/"
+Beispiel: URI:"x-file-cifs:"Pink Floyd/The Wall/"
 
 Dateifreigabe Prefix: //192.168.0.1/Share/Storage/Musik
 Abgespielt wird: //192.168.0.1/Share/Storage/Musik/Pink Floyd/The Wall/

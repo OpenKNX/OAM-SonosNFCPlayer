@@ -162,6 +162,19 @@ void SonosNFCPlayerModule::loop(bool configured)
     {
         _lastCommandProcessTime = 0;
     }
+    auto currentPlayHandle = _currentPlayHandle;
+    if (currentPlayHandle != nullptr && currentPlayHandle->isTimedOut())
+    {
+        if (_playingNotPossibleSince == 0)
+        {
+            _playingNotPossibleSince = max(2UL, millis());
+            currentPlayHandle->channel().pause();
+        }
+        else if (_playingNotPossibleSince > 1 && millis() - _playingNotPossibleSince >= 5000)
+        {
+            _playingNotPossibleSince = 1; // Stop report playing not possible after 5 seconds      
+        }
+    }
     handleLeds();
     handleRotaryControls();
     handleButtons();
@@ -210,9 +223,9 @@ void SonosNFCPlayerModule::loop(bool configured)
         }
         _handlingCardInProgress = false;
     }
-    if (!_playAllowed && _cardReaderState == CardReaderState::TagAvailable || _cardReaderState == CardReaderState::Idle)
+    if (!_startupFinishedPlayAllowed && _cardReaderState == CardReaderState::TagAvailable || _cardReaderState == CardReaderState::Idle)
     {
-        _playAllowed = true;
+        _startupFinishedPlayAllowed = true;
     }
 }
 
@@ -310,7 +323,7 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
             continue;
         }
         auto& name = command.name;
-        if (_playAllowed)
+        if (_startupFinishedPlayAllowed)
         {
             uint8_t deviceIndex = 255;
             uint8_t percentage = 255;
@@ -554,22 +567,23 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
     }
     if (!uri.empty())
     {
-        _currentPlayHandle = _mainChannel->start(uri.c_str(), title.c_str(), image.c_str(), _filePathPrefix.c_str(), _playAllowed);
+        _currentPlayHandle = _mainChannel->start(uri.c_str(), title.c_str(), image.c_str(), _filePathPrefix.c_str(), _startupFinishedPlayAllowed);
+        logDebugP("Started: %s", _currentPlayHandle.get() == nullptr ? "failed" : _currentPlayHandle.get()->uri());
         if (tempPercentage != 255)
         {
             setTempVolumeGroup(tempPercentage, _currentPlayHandle);
         }
-        if (_secondaryChannel != nullptr && _playAllowed)
+        if (_secondaryChannel != nullptr && _startupFinishedPlayAllowed)
             _secondaryChannel->joinToGroupCoordinatorOf(_mainChannel);
     }
-    else if (pause && _playAllowed)
+    else if (pause && _startupFinishedPlayAllowed)
     {
         if (_mainChannel != nullptr && ParamPLY_StopOnRemoveTag && _mainChannel->isPlaying(_currentPlayHandle.get()) == TagPlayState::Playing)
         {
             _mainChannel->pause();
         }
     }
-    else if (continuePlaying && _playAllowed)
+    else if (continuePlaying && _startupFinishedPlayAllowed)
     {
         continuePlay();
     }
@@ -767,6 +781,10 @@ CardReaderState SonosNFCPlayerModule::cardReaderState() const
 
 PlayerState SonosNFCPlayerModule::playerState() const
 {
+    if (!_startupFinishedPlayAllowed)
+    {
+        return PlayerState::Startup;
+    }
     if (_lastCommandProcessTime != 0)
     {
         return PlayerState::CommandProcessing;
@@ -779,6 +797,8 @@ PlayerState SonosNFCPlayerModule::playerState() const
     {
         return PlayerState::SettingVolume;
     }
+    if (_playingNotPossibleSince > 1)
+            return PlayerState::PlayingNotPossible;
     switch (_cardReaderState)
     {
     case CardReaderState::Error:

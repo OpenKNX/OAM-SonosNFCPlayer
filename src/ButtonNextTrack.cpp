@@ -1,4 +1,3 @@
-#pragma once
 #include "ButtonNextTrack.h"
 #include "SonosNFCPlayerModule.h"
 

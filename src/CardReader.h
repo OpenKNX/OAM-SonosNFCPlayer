@@ -11,6 +11,7 @@ enum class CardReaderState
     Error,
     TagReading,
     TagAvailable,
+    CardNotPlayable
 };
 
 class CardReader
