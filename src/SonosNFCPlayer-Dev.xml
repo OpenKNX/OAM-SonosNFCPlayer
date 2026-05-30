@@ -8,8 +8,8 @@
   <op:ETS
     OpenKnxId="0xAE"
     ApplicationNumber="0x2F"
-    ApplicationVersion="0.12.0"
-    ReplacesVersions="0.11 0.10 0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2 0.1"
+    ApplicationVersion="0.13.0"
+    ReplacesVersions="0.12 0.11 0.10 0.9 0.8 0.7 0.6 0.5 0.4 0.3 0.2 0.1"
     ApplicationRevision="0"
     ProductName="Sonos NFC Player"
     BusCurrent="30"
@@ -45,7 +45,14 @@
   <op:define prefix="SONSRC" ModuleType="21"
     share="../lib/OFM-Sonos/src/SonosModule.Sources.share.xml"
     template="../lib/OFM-Sonos/src/SonosModule.Sources.templ.xml"
-    NumChannels="5">
+    NumChannels="20">
+    <op:verify File="../lib/OFM-Sonos/library.json" ModuleVersion="%SON_VerifyVersion%" /> 
+  </op:define>
+  
+  <op:define prefix="SONNOT" ModuleType="25"
+    share="../lib/OFM-Sonos/src/SonosModule.Notifications.share.xml"
+    template="../lib/OFM-Sonos/src/SonosModule.Notifications.templ.xml"
+    NumChannels="10">
     <op:verify File="../lib/OFM-Sonos/library.json" ModuleVersion="%SON_VerifyVersion%" /> 
   </op:define>
 
