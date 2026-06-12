@@ -181,9 +181,7 @@ void SonosNFCPlayerModule::loop(bool configured)
     handleTempVolume();
     if (_cardReader == nullptr)
         return;
-    if (openknxSonosModule.isInitialized() == false)
-        return;
-
+  
     auto cardReaderState = _cardReader->state();
     if (cardReaderState != _cardReaderState)
     {
@@ -204,8 +202,11 @@ void SonosNFCPlayerModule::loop(bool configured)
             logIndentUp();
             _currentCard->logInformation();
             logIndentDown();
-            KoPLY_Card.value(true, DPT_Switch);
-            KoPLY_CardId.value(_currentCard->getUid().c_str(), DPT_String_ASCII);
+            if (configured)
+            {
+                KoPLY_Card.value(true, DPT_Switch);
+                KoPLY_CardId.value(_currentCard->getUid().c_str(), DPT_String_ASCII);
+            }
             handleLeds();
             if (previousCard != nullptr)
                 handleCommands(previousCard->getCommands(), true);
@@ -217,16 +218,22 @@ void SonosNFCPlayerModule::loop(bool configured)
             if (previousCard != nullptr)
                 handleCommands(previousCard->getCommands(), true);
             logInfoP("Card removed");
-            KoPLY_Card.value(false, DPT_Switch);
-            KoPLY_CardId.value("", DPT_String_ASCII);
-           
+            if (configured)
+            {
+                KoPLY_Card.value(false, DPT_Switch);
+                KoPLY_CardId.value("", DPT_String_ASCII);
+            }
         }
         _handlingCardInProgress = false;
     }
+    if (openknxSonosModule.isInitialized() == false)
+        return;
     if (!_startupFinishedPlayAllowed && _cardReaderState == CardReaderState::TagAvailable || _cardReaderState == CardReaderState::Idle)
     {
         _startupFinishedPlayAllowed = true;
     }
+    
+
 }
 
 void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, bool cardRemoved)
