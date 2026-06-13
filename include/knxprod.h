@@ -19,10 +19,10 @@
 #define ETS_ModuleId_DEV 8
 #define ETS_ModuleId_LOG 9
 #define ETS_ModuleId_FCB 10
-#define MAIN_FirmwareName "Sonos NFC Player"
+#define MAIN_FirmwareName "Sonos NFC Player (Beta)"
 #define MAIN_OpenKnxId 0xAE
 #define MAIN_ApplicationNumber 48
-#define MAIN_ApplicationVersion 6
+#define MAIN_ApplicationVersion 7
 #define MAIN_FirmwareRevision 0
 #define MAIN_ApplicationEncoding iso-8859-15
 #define MAIN_ParameterSize 17264
@@ -31,9 +31,9 @@
 #define BASE_ModuleVersion 24
 #define NET_ModuleVersion 6
 #define UCT_ModuleVersion 5
-#define SON_ModuleVersion 4
-#define SONSRC_ModuleVersion 4
-#define SONNOT_ModuleVersion 4
+#define SON_ModuleVersion 5
+#define SONSRC_ModuleVersion 5
+#define SONNOT_ModuleVersion 5
 #define LOG_ModuleVersion 67
 #define FCB_ModuleVersion 10
 // Parameter with single occurrence
@@ -286,7 +286,7 @@
 #define ParamNET_StaticIP                            ((bool)(knx.paramByte(NET_StaticIP) & NET_StaticIPMask))
 // mDNS
 #define ParamNET_mDNS                                ((bool)(knx.paramByte(NET_mDNS) & NET_mDNSMask))
-// Webserver (BETA)
+// Weberver (BETA)
 #define ParamNET_HTTP                                ((bool)(knx.paramByte(NET_HTTP) & NET_HTTPMask))
 // NTP-Client
 #define ParamNET_NTP                                 ((bool)(knx.paramByte(NET_NTP) & NET_NTPMask))
