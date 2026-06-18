@@ -572,7 +572,7 @@ void SonosNFCPlayerModule::handleCommands(const std::vector<Command> &commands, 
             _cardReader->clearCardCache();
         }
     }
-    if (!uri.empty())
+    if (!uri.empty() && _mainChannel != nullptr)
     {
         _currentPlayHandle = _mainChannel->start(uri.c_str(), title.c_str(), image.c_str(), _filePathPrefix.c_str(), _startupFinishedPlayAllowed);
         logDebugP("Started: %s", _currentPlayHandle.get() == nullptr ? "failed" : _currentPlayHandle.get()->uri());
