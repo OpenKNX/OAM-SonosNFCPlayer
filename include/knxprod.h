@@ -19,7 +19,7 @@
 #define ETS_ModuleId_DEV 8
 #define ETS_ModuleId_LOG 9
 #define ETS_ModuleId_FCB 10
-#define MAIN_FirmwareName "Sonos NFC Player (Beta)"
+#define MAIN_FirmwareName "Sonos NFC Player"
 #define MAIN_OpenKnxId 0xAE
 #define MAIN_ApplicationNumber 48
 #define MAIN_ApplicationVersion 7
